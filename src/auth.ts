@@ -52,10 +52,6 @@ export async function verifyToken(
 
         if (alg.startsWith('HS')) {
             key = new TextEncoder().encode(publicKey);
-        } else if (alg.startsWith('RS') || alg.startsWith('PS')) {
-            key = await jose.importSPKI(publicKey, alg);
-        } else if (alg.startsWith('ES')) {
-            key = await jose.importSPKI(publicKey, alg);
         } else {
             key = await jose.importSPKI(publicKey, alg);
         }
