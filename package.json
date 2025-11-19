@@ -1,0 +1,37 @@
+{
+  "name": "@wacht/backend",
+  "version": "1.0.0",
+  "description": "Official Wacht JavaScript Backend SDK",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "prepublishOnly": "pnpm build",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "wacht",
+    "backend",
+    "sdk",
+    "authentication",
+    "jwt"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^1.13.2",
+    "form-data": "^4.0.5",
+    "jose": "^6.1.2"
+  },
+  "devDependencies": {
+    "@types/form-data": "^2.2.1",
+    "@types/jest": "^30.0.0",
+    "@types/node": "^24.10.1",
+    "jest": "^30.2.0",
+    "ts-jest": "^29.4.5",
+    "typescript": "^5.9.3"
+  }
+}
