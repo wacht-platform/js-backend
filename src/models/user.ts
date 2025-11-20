@@ -35,9 +35,10 @@ export interface UpdatePasswordRequest {
 }
 
 export interface InviteUserRequest {
-    email: string;
-    role?: string;
-    organization_id?: string;
+    first_name: string;
+    last_name: string;
+    email_address: string;
+    expiry_days?: number;
 }
 
 export interface UserInvitation {

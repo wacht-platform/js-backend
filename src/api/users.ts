@@ -81,17 +81,26 @@ export async function updateUser(userId: string, request: UpdateUserRequest): Pr
 /**
  * Update user password
  */
-export async function updatePassword(userId: string, request: UpdatePasswordRequest): Promise<void> {
+export async function updatePassword(userId: string, newPassword: string): Promise<void> {
     const client = getClient();
-    await client.patch(`/users/${userId}/password`, request);
+    await client.patch(`/users/${userId}/password`, newPassword);
 }
 
 /**
  * Add email to user
  */
-export async function addEmail(userId: string, email: string): Promise<UserEmail> {
+export async function addEmail(
+    userId: string,
+    email: string,
+    verified?: boolean,
+    isPrimary?: boolean
+): Promise<UserEmail> {
     const client = getClient();
-    const response = await client.post<UserEmail>(`/users/${userId}/emails`, { email });
+    const response = await client.post<UserEmail>(`/users/${userId}/emails`, {
+        email,
+        verified,
+        is_primary: isPrimary,
+    });
     return response.data;
 }
 
@@ -123,10 +132,19 @@ export async function deleteEmail(userId: string, emailId: string): Promise<void
 /**
  * Add phone to user
  */
-export async function addPhone(userId: string, phoneNumber: string): Promise<UserPhone> {
+export async function addPhone(
+    userId: string,
+    phoneNumber: string,
+    countryCode: string,
+    verified?: boolean,
+    isPrimary?: boolean
+): Promise<UserPhone> {
     const client = getClient();
     const response = await client.post<UserPhone>(`/users/${userId}/phones`, {
         phone_number: phoneNumber,
+        country_code: countryCode,
+        verified,
+        is_primary: isPrimary,
     });
     return response.data;
 }
