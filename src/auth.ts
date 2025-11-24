@@ -20,8 +20,7 @@ export interface WachtClaims extends jose.JWTPayload {
         organization?: string[];
         workspace?: string[];
     };
-    claims?: Record<string, any>;
-    [key: string]: any;
+    metadata?: Record<string, any>;
 }
 
 /**
