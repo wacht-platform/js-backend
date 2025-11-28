@@ -38,6 +38,7 @@ export async function createUser(request: CreateUserRequest): Promise<User> {
     if (request.phone_number) formData.append('phone_number', request.phone_number);
     if (request.username) formData.append('username', request.username);
     if (request.password) formData.append('password', request.password);
+    if (request.skip_password_check) formData.append('skip_password_check', 'true');
 
     const response = await client.post<User>('/users', formData, {
         headers: formData.getHeaders(),
@@ -81,9 +82,12 @@ export async function updateUser(userId: string, request: UpdateUserRequest): Pr
 /**
  * Update user password
  */
-export async function updatePassword(userId: string, newPassword: string): Promise<void> {
+/**
+ * Update user password
+ */
+export async function updatePassword(userId: string, request: UpdatePasswordRequest): Promise<void> {
     const client = getClient();
-    await client.patch(`/users/${userId}/password`, newPassword);
+    await client.patch(`/users/${userId}/password`, request);
 }
 
 /**

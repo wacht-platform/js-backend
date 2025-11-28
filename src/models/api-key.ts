@@ -1,13 +1,20 @@
+export type RateLimitUnit = 'second' | 'minute' | 'hour' | 'day';
+export type RateLimitMode = 'per_key' | 'per_ip' | 'per_key_and_ip';
+
+export interface RateLimit {
+    unit: RateLimitUnit;
+    duration: number;
+    max_requests: number;
+    mode?: RateLimitMode;
+}
+
 export interface ApiKeyApp {
     id: string;
     deployment_id: string;
     name: string;
     description?: string;
     is_active: boolean;
-    rate_limit_per_minute?: number;
-    rate_limit_per_hour?: number;
-    rate_limit_per_day?: number;
-    rate_limit_mode?: 'per_key' | 'per_app';
+    rate_limits: RateLimit[];
     created_at: string;
     updated_at: string;
 }
@@ -52,18 +59,14 @@ export interface ApiKeyWithSecret {
 export interface CreateApiKeyAppRequest {
     name: string;
     description?: string;
-    rate_limit_per_minute?: number;
-    rate_limit_per_hour?: number;
-    rate_limit_per_day?: number;
+    rate_limits?: RateLimit[];
 }
 
 export interface UpdateApiKeyAppRequest {
     name?: string;
     description?: string;
     is_active?: boolean;
-    rate_limit_per_minute?: number;
-    rate_limit_per_hour?: number;
-    rate_limit_per_day?: number;
+    rate_limits?: RateLimit[];
 }
 
 export interface CreateApiKeyRequest {

@@ -19,6 +19,7 @@ export interface CreateUserRequest {
     phone_number?: string;
     username?: string;
     password?: string;
+    skip_password_check?: boolean;
 }
 
 export interface UpdateUserRequest {
@@ -30,8 +31,8 @@ export interface UpdateUserRequest {
 }
 
 export interface UpdatePasswordRequest {
-    current_password?: string;
     new_password: string;
+    skip_password_check?: boolean;
 }
 
 export interface InviteUserRequest {

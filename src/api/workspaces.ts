@@ -4,6 +4,7 @@ import {
     CreateWorkspaceRequest,
     UpdateWorkspaceRequest,
     WorkspaceRole,
+    WorkspaceMember,
     CreateWorkspaceRoleRequest,
     UpdateWorkspaceRoleRequest,
     WorkspaceListResponse,
@@ -113,6 +114,57 @@ export async function fetchWorkspaceMembers(
         { params: options }
     );
     return response.data;
+}
+
+/**
+ * Add workspace member
+ */
+export async function addWorkspaceMember(
+    workspaceId: string,
+    userId: string,
+    roleIds: string[]
+): Promise<WorkspaceMember> {
+    const client = getClient();
+    const response = await client.post<{ data: WorkspaceMember }>(
+        `/workspaces/${workspaceId}/members`,
+        {
+            user_id: userId,
+            role_ids: roleIds,
+        }
+    );
+    return response.data.data;
+}
+
+/**
+ * Update workspace member
+ */
+export async function updateWorkspaceMember(
+    workspaceId: string,
+    membershipId: string,
+    options: {
+        roleIds?: string[];
+        publicMetadata?: Record<string, any>;
+    }
+): Promise<void> {
+    const client = getClient();
+    await client.patch(
+        `/workspaces/${workspaceId}/members/${membershipId}`,
+        {
+            role_ids: options.roleIds,
+            public_metadata: options.publicMetadata,
+        }
+    );
+}
+
+/**
+ * Remove workspace member
+ */
+export async function removeWorkspaceMember(
+    workspaceId: string,
+    membershipId: string
+): Promise<void> {
+    const client = getClient();
+    await client.delete(`/workspaces/${workspaceId}/members/${membershipId}`);
 }
 
 /**

@@ -1,6 +1,7 @@
 export * from './client';
 export * from './error';
 export * from './auth';
+export * from './gateway';
 
 // API Resources
 export * from './api/agents';
