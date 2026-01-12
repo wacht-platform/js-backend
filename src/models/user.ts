@@ -1,15 +1,13 @@
 export interface User {
     id: string;
-    email?: string;
-    phone_number?: string;
-    first_name?: string;
-    last_name?: string;
-    profile_picture_url?: string;
-    is_active: boolean;
     created_at: string;
     updated_at: string;
-    last_sign_in_at?: string;
-    // Add other fields as needed based on backend response
+    first_name: string;
+    last_name: string;
+    username?: string;
+    profile_picture_url: string;
+    primary_email_address?: string;
+    primary_phone_number?: string;
 }
 
 export interface CreateUserRequest {
@@ -44,18 +42,24 @@ export interface InviteUserRequest {
 
 export interface UserInvitation {
     id: string;
-    email: string;
-    role?: string;
-    organization_id?: string;
-    invited_at: string;
-    expires_at: string;
+    created_at: string;
+    updated_at: string;
+    deployment_id: string;
+    first_name: string;
+    last_name: string;
+    email_address: string;
+    token: string;
+    expiry: string;
 }
 
 export interface WaitlistUser {
     id: string;
-    email: string;
     created_at: string;
-    status: string;
+    updated_at: string;
+    deployment_id: string;
+    email_address: string;
+    first_name?: string;
+    last_name?: string;
 }
 
 export interface UserEmail {

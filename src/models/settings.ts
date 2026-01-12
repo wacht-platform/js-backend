@@ -37,9 +37,11 @@ export interface UpdateJwtTemplateRequest {
 }
 
 export interface EmailTemplate {
-    name: string;
-    subject: string;
-    body: string;
+    template_name: string;
+    template_data: string;
+    template_from: string;
+    template_reply_to: string;
+    template_subject: string;
 }
 
 export interface SocialConnection {

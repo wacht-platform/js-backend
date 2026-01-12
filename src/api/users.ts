@@ -205,6 +205,14 @@ export async function inviteUser(request: InviteUserRequest): Promise<UserInvita
 }
 
 /**
+ * Delete invitation
+ */
+export async function deleteInvitation(invitationId: string): Promise<void> {
+    const client = getClient();
+    await client.delete(`/invited-users/${invitationId}`);
+}
+
+/**
  * Fetch waitlist
  */
 export async function fetchWaitlist(): Promise<WaitlistResponse> {
@@ -216,8 +224,8 @@ export async function fetchWaitlist(): Promise<WaitlistResponse> {
 /**
  * Approve waitlist user
  */
-export async function approveWaitlistUser(waitlistUserId: string): Promise<User> {
+export async function approveWaitlistUser(waitlistUserId: string): Promise<UserInvitation> {
     const client = getClient();
-    const response = await client.post<User>(`/user-waitlist/${waitlistUserId}/approve`);
+    const response = await client.post<UserInvitation>(`/user-waitlist/${waitlistUserId}/approve`);
     return response.data;
 }
