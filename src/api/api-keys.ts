@@ -1,108 +1,132 @@
-import { getClient } from '../client';
-import {
-    ApiKeyApp,
-    ApiKey,
-    ApiKeyWithSecret,
-    CreateApiKeyAppRequest,
-    UpdateApiKeyAppRequest,
-    CreateApiKeyRequest,
-    RevokeApiKeyRequest,
-    RotateApiKeyRequest,
-    ListApiKeyAppsResponse,
-    ListApiKeysResponse,
-} from '../models/api-key';
+import { getClient, type PaginatedResponse, type ListOptions } from '../client';
+import type {
+  ApiAuthApp,
+  CreateApiAuthAppRequest,
+  UpdateApiAuthAppRequest,
+  ApiKey,
+  ApiKeyWithSecret,
+  CreateApiKeyRequest,
+  RevokeApiKeyRequest,
+  RotateApiKeyRequest,
+  ApiKeyScopeInfo,
+} from '../models';
 
 /**
- * Get a single API key app by name
+ * List API auth apps
  */
-export async function getApiKeyApp(appName: string): Promise<ApiKeyApp> {
-    const client = getClient();
-    const response = await client.get<ApiKeyApp>(`/api-keys/apps/${appName}`);
-    return response.data;
+export async function listApiAuthApps(
+  options?: ListOptions & { include_inactive?: boolean }
+): Promise<ApiAuthApp[]> {
+  const client = getClient();
+  const params = new URLSearchParams();
+  if (options?.include_inactive !== undefined)
+    params.append('include_inactive', String(options.include_inactive));
+  const queryString = params.toString();
+  return client.get<ApiAuthApp[]>(
+    `/api-auth/apps${queryString ? `?${queryString}` : ''}`
+  );
 }
 
 /**
- * List API key apps
+ * Get an API auth app by name
  */
-export async function listApiKeyApps(includeInactive?: boolean): Promise<ApiKeyApp[]> {
-    const client = getClient();
-    const response = await client.get<ListApiKeyAppsResponse>('/api-keys/apps', {
-        params: { include_inactive: includeInactive },
-    });
-    return response.data.apps;
+export async function getApiAuthApp(appName: string): Promise<ApiAuthApp> {
+  const client = getClient();
+  return client.get<ApiAuthApp>(`/api-auth/apps/${appName}`);
 }
 
 /**
- * Create an API key app
+ * Create an API auth app
  */
-export async function createApiKeyApp(request: CreateApiKeyAppRequest): Promise<ApiKeyApp> {
-    const client = getClient();
-    const response = await client.post<ApiKeyApp>('/api-keys/apps', request);
-    return response.data;
+export async function createApiAuthApp(
+  request: CreateApiAuthAppRequest
+): Promise<ApiAuthApp> {
+  const client = getClient();
+  return client.post<ApiAuthApp>('/api-auth/apps', request);
 }
 
 /**
- * Update an API key app
+ * Update an API auth app
  */
-export async function updateApiKeyApp(
-    appName: string,
-    request: UpdateApiKeyAppRequest
-): Promise<ApiKeyApp> {
-    const client = getClient();
-    const response = await client.patch<ApiKeyApp>(`/api-keys/apps/${appName}`, request);
-    return response.data;
+export async function updateApiAuthApp(
+  appName: string,
+  request: UpdateApiAuthAppRequest
+): Promise<ApiAuthApp> {
+  const client = getClient();
+  return client.patch<ApiAuthApp>(
+    `/api-auth/apps/${appName}`,
+    request
+  );
 }
 
 /**
- * Delete an API key app
+ * Delete an API auth app
  */
-export async function deleteApiKeyApp(appName: string): Promise<void> {
-    const client = getClient();
-    await client.delete(`/api-keys/apps/${appName}`);
+export async function deleteApiAuthApp(appName: string): Promise<void> {
+  const client = getClient();
+  return client.delete<void>(`/api-auth/apps/${appName}`);
 }
 
 /**
  * List API keys for an app
  */
 export async function listApiKeys(
-    appName: string,
-    includeInactive?: boolean
+  appName: string,
+  options?: ListOptions & { include_inactive?: boolean }
 ): Promise<ApiKey[]> {
-    const client = getClient();
-    const response = await client.get<ListApiKeysResponse>(`/api-keys/apps/${appName}/keys`, {
-        params: { include_inactive: includeInactive },
-    });
-    return response.data.keys;
+  const client = getClient();
+  const params = new URLSearchParams();
+  if (options?.include_inactive !== undefined)
+    params.append('include_inactive', String(options.include_inactive));
+  const queryString = params.toString();
+  return client.get<ApiKey[]>(
+    `/api-auth/apps/${appName}/keys${queryString ? `?${queryString}` : ''}`
+  );
 }
 
 /**
  * Create an API key
  */
 export async function createApiKey(
-    appName: string,
-    request: CreateApiKeyRequest
+  appName: string,
+  request: CreateApiKeyRequest
 ): Promise<ApiKeyWithSecret> {
-    const client = getClient();
-    const response = await client.post<ApiKeyWithSecret>(
-        `/api-keys/apps/${appName}/keys`,
-        request
-    );
-    return response.data;
+  const client = getClient();
+  return client.post<ApiKeyWithSecret>(
+    `/api-auth/apps/${appName}/keys`,
+    request
+  );
 }
 
 /**
  * Revoke an API key
  */
 export async function revokeApiKey(request: RevokeApiKeyRequest): Promise<void> {
-    const client = getClient();
-    await client.post('/api-keys/revoke', request);
+  const client = getClient();
+  return client.post<void>('/api-auth/keys/revoke', request);
 }
 
 /**
  * Rotate an API key
  */
-export async function rotateApiKey(request: RotateApiKeyRequest): Promise<ApiKeyWithSecret> {
-    const client = getClient();
-    const response = await client.post<ApiKeyWithSecret>('/api-keys/rotate', request);
-    return response.data;
+export async function rotateApiKey(
+  request: RotateApiKeyRequest
+): Promise<ApiKeyWithSecret> {
+  const client = getClient();
+  return client.post<ApiKeyWithSecret>('/api-auth/keys/rotate', request);
+}
+
+/**
+ * Get available API key scopes
+ */
+export async function getAvailableScopes(): Promise<{
+  scopes: ApiKeyScopeInfo[];
+  presets: Array<{
+    name: string;
+    description: string;
+    scopes: string[];
+  }>;
+}> {
+  const client = getClient();
+  return client.get('/api-auth/scopes');
 }

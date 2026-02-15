@@ -1,29 +1,34 @@
-export interface RecentSignup {
-    user_id: string;
-    email: string;
-    name: string;
-    created_at: string;
-    auth_provider: string;
-    avatar_url?: string;
-}
-
-export interface RecentSignupsResponse {
-    signups: RecentSignup[];
-}
-
+/**
+ * Analytics stats summary
+ */
 export interface AnalyticsStats {
-    unique_signins: number;
-    signups: number;
-    organizations_created: number;
-    workspaces_created: number;
-    total_signups: number;
-    unique_signins_change?: number;
-    signups_change?: number;
-    organizations_created_change?: number;
-    workspaces_created_change?: number;
+  total_users: number;
+  active_users: number;
+  total_organizations: number;
+  total_workspaces: number;
+  new_users_today: number;
+  new_users_this_week: number;
+  new_users_this_month: number;
 }
 
-export interface AnalyticsStatsOptions {
-    from: string;
-    to: string;
+/**
+ * Recent signup
+ */
+export interface RecentSignup {
+  id: string;
+  user_id: string;
+  first_name: string;
+  last_name: string;
+  email_address?: string;
+  phone_number?: string;
+  created_at: string;
+}
+
+/**
+ * Recent signup organization
+ */
+export interface RecentSignupOrganization {
+  id: string;
+  name: string;
+  created_at: string;
 }

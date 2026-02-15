@@ -1,219 +1,182 @@
-import { getClient } from '../client';
-import {
-    Workspace,
-    CreateWorkspaceRequest,
-    UpdateWorkspaceRequest,
-    WorkspaceRole,
-    WorkspaceMember,
-    CreateWorkspaceRoleRequest,
-    UpdateWorkspaceRoleRequest,
-    WorkspaceListResponse,
-    WorkspaceMemberListResponse,
-    WorkspaceRoleListResponse,
-    ListWorkspacesOptions,
-} from '../models/workspace';
+import { getClient, type PaginatedResponse, type ListOptions } from '../client';
+import type {
+  Workspace,
+  CreateWorkspaceRequest,
+  UpdateWorkspaceRequest,
+  WorkspaceMember,
+  AddWorkspaceMemberRequest,
+  UpdateWorkspaceMemberRequest,
+  WorkspaceRole,
+  CreateWorkspaceRoleRequest,
+  UpdateWorkspaceRoleRequest,
+} from '../models';
 
 /**
- * Fetch workspaces
+ * List workspaces
  */
-export async function fetchWorkspaces(
-    options?: ListWorkspacesOptions
-): Promise<WorkspaceListResponse> {
-    const client = getClient();
-    const response = await client.get<WorkspaceListResponse>('/workspaces', {
-        params: options,
-    });
-    return response.data;
+export async function listWorkspaces(
+  options?: ListOptions & { organization_id?: string }
+): Promise<PaginatedResponse<Workspace>> {
+  const client = getClient();
+  const params = new URLSearchParams();
+  if (options?.limit) params.append('limit', String(options.limit));
+  if (options?.offset !== undefined)
+    params.append('offset', String(options.offset));
+  if (options?.organization_id)
+    params.append('organization_id', options.organization_id);
+  const queryString = params.toString();
+  return client.get<PaginatedResponse<Workspace>>(
+    `/workspaces${queryString ? `?${queryString}` : ''}`
+  );
 }
 
 /**
- * Fetch workspace
+ * Get a workspace by ID
  */
-export async function fetchWorkspace(workspaceId: string): Promise<Workspace> {
-    const client = getClient();
-    const response = await client.get<Workspace>(`/workspaces/${workspaceId}`);
-    return response.data;
+export async function getWorkspace(workspaceId: string): Promise<Workspace> {
+  const client = getClient();
+  return client.get<Workspace>(`/workspaces/${workspaceId}`);
 }
 
 /**
- * Update workspace
+ * Create a workspace
+ */
+export async function createWorkspace(
+  request: CreateWorkspaceRequest
+): Promise<Workspace> {
+  const client = getClient();
+  return client.post<Workspace>('/workspaces', request);
+}
+
+/**
+ * Update a workspace
  */
 export async function updateWorkspace(
-    workspaceId: string,
-    request: UpdateWorkspaceRequest
+  workspaceId: string,
+  request: UpdateWorkspaceRequest
 ): Promise<Workspace> {
-    const client = getClient();
-    const FormData = require('form-data');
-    const formData = new FormData();
-
-    if (request.name) formData.append('name', request.name);
-    if (request.description) formData.append('description', request.description);
-    if (request.image_url) formData.append('image_url', request.image_url);
-    if (request.public_metadata) {
-        formData.append('public_metadata', JSON.stringify(request.public_metadata));
-    }
-    if (request.private_metadata) {
-        formData.append('private_metadata', JSON.stringify(request.private_metadata));
-    }
-
-    const response = await client.patch<Workspace>(
-        `/workspaces/${workspaceId}`,
-        formData,
-        { headers: formData.getHeaders() }
-    );
-    return response.data;
+  const client = getClient();
+  return client.patch<Workspace>(`/workspaces/${workspaceId}`, request);
 }
 
 /**
- * Delete workspace
+ * Delete a workspace
  */
 export async function deleteWorkspace(workspaceId: string): Promise<void> {
-    const client = getClient();
-    await client.delete(`/workspaces/${workspaceId}`);
+  const client = getClient();
+  return client.delete<void>(`/workspaces/${workspaceId}`);
 }
 
 /**
- * Create workspace in organization
+ * List workspace members
  */
-export async function createWorkspaceInOrganization(
-    organizationId: string,
-    request: CreateWorkspaceRequest
-): Promise<Workspace> {
-    const client = getClient();
-    const FormData = require('form-data');
-    const formData = new FormData();
-
-    formData.append('name', request.name);
-    if (request.description) formData.append('description', request.description);
-    if (request.image_url) formData.append('image_url', request.image_url);
-    if (request.public_metadata) {
-        formData.append('public_metadata', JSON.stringify(request.public_metadata));
-    }
-    if (request.private_metadata) {
-        formData.append('private_metadata', JSON.stringify(request.private_metadata));
-    }
-
-    const response = await client.post<Workspace>(
-        `/organizations/${organizationId}/workspaces`,
-        formData,
-        { headers: formData.getHeaders() }
-    );
-    return response.data;
+export async function listWorkspaceMembers(
+  workspaceId: string,
+  options?: ListOptions
+): Promise<PaginatedResponse<WorkspaceMember>> {
+  const client = getClient();
+  const params = options
+    ? `?limit=${options.limit || 50}&offset=${options.offset || 0}`
+    : '';
+  return client.get<PaginatedResponse<WorkspaceMember>>(
+    `/workspaces/${workspaceId}/members${params}`
+  );
 }
 
 /**
- * Fetch workspace members
- */
-export async function fetchWorkspaceMembers(
-    workspaceId: string,
-    options?: { limit?: number; offset?: number }
-): Promise<WorkspaceMemberListResponse> {
-    const client = getClient();
-    const response = await client.get<WorkspaceMemberListResponse>(
-        `/workspaces/${workspaceId}/members`,
-        { params: options }
-    );
-    return response.data;
-}
-
-/**
- * Add workspace member
+ * Add a member to a workspace
  */
 export async function addWorkspaceMember(
-    workspaceId: string,
-    userId: string,
-    roleIds: string[]
+  workspaceId: string,
+  request: AddWorkspaceMemberRequest
 ): Promise<WorkspaceMember> {
-    const client = getClient();
-    const response = await client.post<{ data: WorkspaceMember }>(
-        `/workspaces/${workspaceId}/members`,
-        {
-            user_id: userId,
-            role_ids: roleIds,
-        }
-    );
-    return response.data.data;
+  const client = getClient();
+  return client.post<WorkspaceMember>(
+    `/workspaces/${workspaceId}/members`,
+    request
+  );
 }
 
 /**
- * Update workspace member
+ * Update a workspace member
  */
 export async function updateWorkspaceMember(
-    workspaceId: string,
-    membershipId: string,
-    options: {
-        roleIds?: string[];
-        publicMetadata?: Record<string, any>;
-    }
-): Promise<void> {
-    const client = getClient();
-    await client.patch(
-        `/workspaces/${workspaceId}/members/${membershipId}`,
-        {
-            role_ids: options.roleIds,
-            public_metadata: options.publicMetadata,
-        }
-    );
+  workspaceId: string,
+  memberId: string,
+  request: UpdateWorkspaceMemberRequest
+): Promise<WorkspaceMember> {
+  const client = getClient();
+  return client.patch<WorkspaceMember>(
+    `/workspaces/${workspaceId}/members/${memberId}`,
+    request
+  );
 }
 
 /**
- * Remove workspace member
+ * Remove a member from a workspace
  */
 export async function removeWorkspaceMember(
-    workspaceId: string,
-    membershipId: string
+  workspaceId: string,
+  memberId: string
 ): Promise<void> {
-    const client = getClient();
-    await client.delete(`/workspaces/${workspaceId}/members/${membershipId}`);
+  const client = getClient();
+  return client.delete<void>(
+    `/workspaces/${workspaceId}/members/${memberId}`
+  );
 }
 
 /**
- * Fetch workspace roles
+ * List workspace roles
  */
-export async function fetchWorkspaceRoles(): Promise<WorkspaceRoleListResponse> {
-    const client = getClient();
-    const response = await client.get<WorkspaceRoleListResponse>('/workspace-roles');
-    return response.data;
+export async function listWorkspaceRoles(
+  workspaceId: string,
+  options?: ListOptions
+): Promise<PaginatedResponse<WorkspaceRole>> {
+  const client = getClient();
+  const params = options
+    ? `?limit=${options.limit || 50}&offset=${options.offset || 0}`
+    : '';
+  return client.get<PaginatedResponse<WorkspaceRole>>(
+    `/workspaces/${workspaceId}/roles${params}`
+  );
 }
 
 /**
- * Create workspace role
+ * Create a workspace role
  */
 export async function createWorkspaceRole(
-    workspaceId: string,
-    request: CreateWorkspaceRoleRequest
+  workspaceId: string,
+  request: CreateWorkspaceRoleRequest
 ): Promise<WorkspaceRole> {
-    const client = getClient();
-    const response = await client.post<WorkspaceRole>(
-        `/workspaces/${workspaceId}/roles`,
-        request
-    );
-    return response.data;
+  const client = getClient();
+  return client.post<WorkspaceRole>(
+    `/workspaces/${workspaceId}/roles`,
+    request
+  );
 }
 
 /**
- * Update workspace role
+ * Update a workspace role
  */
 export async function updateWorkspaceRole(
-    workspaceId: string,
-    roleId: string,
-    request: UpdateWorkspaceRoleRequest
+  workspaceId: string,
+  roleId: string,
+  request: UpdateWorkspaceRoleRequest
 ): Promise<WorkspaceRole> {
-    const client = getClient();
-    const response = await client.patch<WorkspaceRole>(
-        `/workspaces/${workspaceId}/roles/${roleId}`,
-        request
-    );
-    return response.data;
+  const client = getClient();
+  return client.patch<WorkspaceRole>(
+    `/workspaces/${workspaceId}/roles/${roleId}`,
+    request
+  );
 }
 
 /**
- * Delete workspace role
+ * Delete a workspace role
  */
 export async function deleteWorkspaceRole(
-    workspaceId: string,
-    roleId: string
+  workspaceId: string,
+  roleId: string
 ): Promise<void> {
-    const client = getClient();
-    await client.delete(`/workspaces/${workspaceId}/roles/${roleId}`);
+  const client = getClient();
+  return client.delete<void>(`/workspaces/${workspaceId}/roles/${roleId}`);
 }

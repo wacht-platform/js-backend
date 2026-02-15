@@ -1,317 +1,282 @@
-import { getClient } from '../client';
-import {
-    WebhookApp,
-    WebhookAppEvent,
-    WebhookEndpoint,
-    WebhookEndpointSubscription,
-    WebhookDeliveryListResponse,
-    WebhookDeliveryDetails,
-    WebhookAnalyticsResult,
-    WebhookTimeseriesResult,
-    ListWebhookAppsQuery,
-    ListWebhookAppsResponse,
-    CreateWebhookAppRequest,
-    UpdateWebhookAppRequest,
-    GetAvailableEventsResponse,
-    ListWebhookEndpointsQuery,
-    ListWebhookEndpointsResponse,
-    CreateWebhookEndpointRequest,
-    UpdateWebhookEndpointRequest,
-    TriggerWebhookEventRequest,
-    TriggerWebhookEventResponse,
-    BatchTriggerWebhookEventsRequest,
-    ReplayWebhookDeliveryRequest,
-    ReplayWebhookDeliveryResponse,
-    ReactivateEndpointResponse,
-    TestWebhookEndpointRequest,
-    TestWebhookEndpointResponse,
-    WebhookAnalyticsQuery,
-    WebhookTimeseriesQuery,
-    GetAppWebhookDeliveriesQuery,
-} from '../models/webhook';
-
-/**
- * Get a webhook app by name
- */
-export async function getWebhookApp(appName: string): Promise<WebhookApp> {
-    const client = getClient();
-    const response = await client.get<WebhookApp>(`/webhooks/apps/${appName}`);
-    return response.data;
-}
+import { getClient, type PaginatedResponse, type ListOptions } from '../client';
+import type {
+  WebhookApp,
+  CreateWebhookAppRequest,
+  UpdateWebhookAppRequest,
+  TriggerWebhookRequest,
+  WebhookDeliveryAttempt,
+  WebhookAnalytics,
+  WebhookEndpoint,
+  WebhookDelivery,
+  WebhookEvent,
+  WebhookStats,
+  WebhookTimeseriesData,
+  CreateWebhookEndpointRequest,
+  UpdateWebhookEndpointRequest,
+} from '../models';
 
 /**
  * List webhook apps
  */
 export async function listWebhookApps(
-    options?: ListWebhookAppsQuery
-): Promise<ListWebhookAppsResponse> {
-    const client = getClient();
-    const response = await client.get<ListWebhookAppsResponse>('/webhooks/apps', {
-        params: options,
-    });
-    return response.data;
+  options?: ListOptions & { include_inactive?: boolean }
+): Promise<PaginatedResponse<WebhookApp>> {
+  const client = getClient();
+  const params = new URLSearchParams();
+  if (options?.limit) params.append('limit', String(options.limit));
+  if (options?.offset !== undefined)
+    params.append('offset', String(options.offset));
+  if (options?.include_inactive !== undefined)
+    params.append('include_inactive', String(options.include_inactive));
+  const queryString = params.toString();
+  return client.get<PaginatedResponse<WebhookApp>>(
+    `/webhooks/apps${queryString ? `?${queryString}` : ''}`
+  );
+}
+
+/**
+ * Get a webhook app
+ */
+export async function getWebhookApp(appId: string): Promise<WebhookApp> {
+  const client = getClient();
+  return client.get<WebhookApp>(`/webhooks/apps/${appId}`);
 }
 
 /**
  * Create a webhook app
  */
 export async function createWebhookApp(
-    request: CreateWebhookAppRequest
+  request: CreateWebhookAppRequest
 ): Promise<WebhookApp> {
-    const client = getClient();
-    const response = await client.post<WebhookApp>('/webhooks/apps', request);
-    return response.data;
+  const client = getClient();
+  return client.post<WebhookApp>('/webhooks/apps', request);
 }
 
 /**
  * Update a webhook app
  */
 export async function updateWebhookApp(
-    appName: string,
-    request: UpdateWebhookAppRequest
+  appId: string,
+  request: UpdateWebhookAppRequest
 ): Promise<WebhookApp> {
-    const client = getClient();
-    const response = await client.patch<WebhookApp>(
-        `/webhooks/apps/${appName}`,
-        request
-    );
-    return response.data;
+  const client = getClient();
+  return client.patch<WebhookApp>(`/webhooks/apps/${appId}`, request);
 }
 
 /**
  * Delete a webhook app
  */
-export async function deleteWebhookApp(appName: string): Promise<void> {
-    const client = getClient();
-    await client.delete(`/webhooks/apps/${appName}`);
+export async function deleteWebhookApp(appId: string): Promise<void> {
+  const client = getClient();
+  return client.delete<void>(`/webhooks/apps/${appId}`);
 }
 
 /**
- * Rotate webhook secret
+ * Trigger a webhook
  */
-export async function rotateWebhookSecret(appName: string): Promise<WebhookApp> {
-    const client = getClient();
-    const response = await client.post<WebhookApp>(
-        `/webhooks/apps/${appName}/rotate-secret`
-    );
-    return response.data;
+export async function triggerWebhook(
+  appName: string,
+  request: TriggerWebhookRequest
+): Promise<{ status: string }> {
+  const client = getClient();
+  return client.post<{ status: string }>(
+    `/webhooks/apps/${appName}/trigger`,
+    request
+  );
 }
 
 /**
- * Get webhook events for an app
+ * Get webhook analytics
  */
-export async function getWebhookEvents(
-    appName: string
-): Promise<WebhookAppEvent[]> {
-    const client = getClient();
-    const response = await client.get<GetAvailableEventsResponse>(
-        `/webhooks/apps/${appName}/events`
-    );
-    return response.data.events;
+export async function getWebhookAnalytics(appId: string): Promise<WebhookAnalytics> {
+  const client = getClient();
+  return client.get<WebhookAnalytics>(`/webhooks/apps/${appId}/analytics`);
+}
+
+/**
+ * List webhook delivery attempts
+ */
+export async function listDeliveryAttempts(
+  webhookId: string,
+  options?: ListOptions
+): Promise<PaginatedResponse<WebhookDelivery>> {
+  const client = getClient();
+  const params = new URLSearchParams();
+  if (options?.limit) params.append('limit', String(options.limit));
+  if (options?.offset !== undefined)
+    params.append('offset', String(options.offset));
+  const queryString = params.toString();
+  return client.get<PaginatedResponse<WebhookDelivery>>(
+    `/webhooks/apps/${webhookId}/deliveries${queryString ? `?${queryString}` : ''}`
+  );
+}
+
+/**
+ * Get webhook stats
+ */
+export async function getWebhookStats(appId: string): Promise<WebhookStats> {
+  const client = getClient();
+  return client.get<WebhookStats>(`/webhooks/apps/${appId}/stats`);
+}
+
+/**
+ * Get webhook timeseries data
+ */
+export async function getWebhookTimeseries(
+  appId: string,
+  options?: { interval?: 'hour' | 'day' | 'week' | 'month'; limit?: number }
+): Promise<WebhookTimeseriesData[]> {
+  const client = getClient();
+  const params = new URLSearchParams();
+  if (options?.interval) params.append('interval', options.interval);
+  if (options?.limit) params.append('limit', String(options.limit));
+  const queryString = params.toString();
+  return client.get<WebhookTimeseriesData[]>(
+    `/webhooks/apps/${appId}/timeseries${queryString ? `?${queryString}` : ''}`
+  );
+}
+
+/**
+ * List webhook events
+ */
+export async function listWebhookEvents(
+  appId: string
+): Promise<WebhookEvent[]> {
+  const client = getClient();
+  return client.get<WebhookEvent[]>(`/webhooks/apps/${appId}/events`);
 }
 
 /**
  * List webhook endpoints
  */
 export async function listWebhookEndpoints(
-    appName: string,
-    options?: ListWebhookEndpointsQuery
-): Promise<ListWebhookEndpointsResponse> {
-    const client = getClient();
-    const response = await client.get<ListWebhookEndpointsResponse>(
-        `/webhooks/apps/${appName}/endpoints`,
-        {
-            params: options,
-        }
-    );
-    return response.data;
+  appId: string
+): Promise<WebhookEndpoint[]> {
+  const client = getClient();
+  return client.get<WebhookEndpoint[]>(`/webhooks/apps/${appId}/endpoints`);
 }
 
 /**
  * Create a webhook endpoint
  */
 export async function createWebhookEndpoint(
-    request: CreateWebhookEndpointRequest
+  appId: string,
+  request: CreateWebhookEndpointRequest
 ): Promise<WebhookEndpoint> {
-    const client = getClient();
-    const response = await client.post<WebhookEndpoint>(
-        '/webhooks/endpoints',
-        request
-    );
-    return response.data;
+  const client = getClient();
+  return client.post<WebhookEndpoint>(
+    `/webhooks/apps/${appId}/endpoints`,
+    request
+  );
+}
+
+/**
+ * Get a webhook endpoint
+ */
+export async function getWebhookEndpoint(
+  appId: string,
+  endpointId: string
+): Promise<WebhookEndpoint> {
+  const client = getClient();
+  return client.get<WebhookEndpoint>(
+    `/webhooks/endpoints/${endpointId}`
+  );
 }
 
 /**
  * Update a webhook endpoint
  */
 export async function updateWebhookEndpoint(
-    endpointId: string,
-    request: UpdateWebhookEndpointRequest
+  endpointId: string,
+  request: UpdateWebhookEndpointRequest
 ): Promise<WebhookEndpoint> {
-    const client = getClient();
-    const response = await client.patch<WebhookEndpoint>(
-        `/webhooks/endpoints/${endpointId}`,
-        request
-    );
-    return response.data;
+  const client = getClient();
+  return client.patch<WebhookEndpoint>(
+    `/webhooks/endpoints/${endpointId}`,
+    request
+  );
 }
 
 /**
  * Delete a webhook endpoint
  */
-export async function deleteWebhookEndpoint(endpointId: string): Promise<void> {
-    const client = getClient();
-    await client.delete(`/webhooks/endpoints/${endpointId}`);
+export async function deleteWebhookEndpoint(
+  endpointId: string
+): Promise<void> {
+  const client = getClient();
+  return client.delete<void>(`/webhooks/endpoints/${endpointId}`);
 }
 
 /**
- * Trigger a webhook event
+ * Test a webhook endpoint
  */
-export async function triggerWebhookEvent(
-    appName: string,
-    request: TriggerWebhookEventRequest
-): Promise<TriggerWebhookEventResponse> {
-    const client = getClient();
-    const response = await client.post<TriggerWebhookEventResponse>(
-        `/webhooks/apps/${appName}/trigger`,
-        request
-    );
-    return response.data;
-}
-
-/**
- * Batch trigger webhook events
- */
-export async function batchTriggerWebhookEvents(
-    appName: string,
-    request: BatchTriggerWebhookEventsRequest
-): Promise<TriggerWebhookEventResponse[]> {
-    const client = getClient();
-    const response = await client.post<TriggerWebhookEventResponse[]>(
-        `/webhooks/apps/${appName}/trigger/batch`,
-        request
-    );
-    return response.data;
-}
-
-/**
- * Get webhook deliveries for an app
- */
-export async function getAppWebhookDeliveries(
-    appName: string,
-    options?: GetAppWebhookDeliveriesQuery
-): Promise<WebhookDeliveryListResponse[]> {
-    const client = getClient();
-    // Note: The backend returns a paginated response wrapper, but here we return the list directly
-    // or we should update the return type to match the paginated response.
-    // Based on Rust SDK, it returns GetWebhookDeliveriesResponse which has data field.
-    // Let's assume we want the raw response data which is the paginated wrapper.
-    // But for simplicity and consistency with other list methods, let's return the wrapper or data.
-    // The Rust SDK `get_webhook_deliveries` returns `GetWebhookDeliveriesResponse`.
-    // Let's update the return type to `any` for now or define a wrapper.
-    // Actually, looking at `models/webhook.ts`, I didn't define a `GetAppWebhookDeliveriesResponse`.
-    // Let's return `any` for now to be safe or just the data array if we want to simplify.
-    // But wait, the platform returns `PaginatedResponse<WebhookDeliveryListResponse>`.
-    const response = await client.get<any>(
-        `/webhooks/apps/${appName}/deliveries`,
-        {
-            params: options,
-        }
-    );
-    return response.data.data; // Assuming standard paginated response structure
-}
-
-/**
- * Get webhook delivery details
- */
-export async function getWebhookDeliveryDetails(
-    deliveryId: string,
-    status?: string
-): Promise<WebhookDeliveryDetails> {
-    const client = getClient();
-    const response = await client.get<WebhookDeliveryDetails>(
-        `/webhooks/deliveries/${deliveryId}`,
-        {
-            params: { status },
-        }
-    );
-    return response.data;
-}
-
-/**
- * Replay webhook deliveries
- */
-export async function replayWebhookDeliveries(
-    appName: string,
-    request: ReplayWebhookDeliveryRequest
-): Promise<ReplayWebhookDeliveryResponse> {
-    const client = getClient();
-    const response = await client.post<ReplayWebhookDeliveryResponse>(
-        `/webhooks/apps/${appName}/deliveries/replay`,
-        request
-    );
-    return response.data;
+export async function testWebhookEndpoint(
+  appId: string,
+  endpointId: string
+): Promise<{ success: boolean; message?: string }> {
+  const client = getClient();
+  return client.post<{ success: boolean; message?: string }>(
+    `/webhooks/apps/${appId}/endpoints/${endpointId}/test`
+  );
 }
 
 /**
  * Reactivate a webhook endpoint
  */
 export async function reactivateWebhookEndpoint(
-    endpointId: string
-): Promise<ReactivateEndpointResponse> {
-    const client = getClient();
-    const response = await client.post<ReactivateEndpointResponse>(
-        `/webhooks/endpoints/${endpointId}/reactivate`
-    );
-    return response.data;
+  endpointId: string
+): Promise<WebhookEndpoint> {
+  const client = getClient();
+  return client.post<WebhookEndpoint>(
+    `/webhooks/endpoints/${endpointId}/reactivate`
+  );
 }
 
 /**
- * Test webhook endpoint
+ * Replay a webhook delivery
  */
-export async function testWebhookEndpoint(
-    appName: string,
-    endpointId: string,
-    request: TestWebhookEndpointRequest
-): Promise<TestWebhookEndpointResponse> {
-    const client = getClient();
-    const response = await client.post<TestWebhookEndpointResponse>(
-        `/webhooks/apps/${appName}/endpoints/${endpointId}/test`,
-        request
-    );
-    return response.data;
+export async function replayWebhookDelivery(
+  appId: string,
+  deliveryId: string
+): Promise<{ status: string }> {
+  const client = getClient();
+  return client.post<{ status: string }>(
+    `/webhooks/apps/${appId}/deliveries/${deliveryId}/replay`
+  );
 }
 
 /**
- * Get webhook analytics
+ * Get a webhook delivery
  */
-export async function getWebhookAnalytics(
-    appName: string,
-    options?: WebhookAnalyticsQuery
-): Promise<WebhookAnalyticsResult> {
-    const client = getClient();
-    const response = await client.get<WebhookAnalyticsResult>(
-        `/webhooks/apps/${appName}/analytics`,
-        {
-            params: options,
-        }
-    );
-    return response.data;
+export async function getWebhookDelivery(
+  deliveryId: string
+): Promise<WebhookDelivery> {
+  const client = getClient();
+  return client.get<WebhookDelivery>(`/webhooks/deliveries/${deliveryId}`);
 }
 
 /**
- * Get webhook timeseries
+ * Rotate webhook app secret
  */
-export async function getWebhookTimeseries(
-    appName: string,
-    options?: WebhookTimeseriesQuery
-): Promise<WebhookTimeseriesResult> {
-    const client = getClient();
-    const response = await client.get<WebhookTimeseriesResult>(
-        `/webhooks/apps/${appName}/timeseries`,
-        {
-            params: options,
-        }
-    );
-    return response.data;
+export async function rotateWebhookSecret(
+  appId: string
+): Promise<{ webhook_secret: string }> {
+  const client = getClient();
+  return client.post<{ webhook_secret: string }>(
+    `/webhooks/apps/${appId}/rotate-secret`
+  );
+}
+
+/**
+ * Trigger webhook app (batch)
+ */
+export async function triggerWebhookBatch(
+  appName: string,
+  events: TriggerWebhookRequest[]
+): Promise<{ status: string }> {
+  const client = getClient();
+  return client.post<{ status: string }>(
+    `/webhooks/apps/${appName}/trigger-batch`,
+    { events }
+  );
 }

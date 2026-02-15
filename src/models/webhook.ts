@@ -1,278 +1,190 @@
+/**
+ * Webhook App model
+ */
 export interface WebhookApp {
-    deployment_id: string;
-    name: string;
-    description?: string;
-    signing_secret: string;
-    is_active: boolean;
-    created_at: string;
-    updated_at: string;
+  id: string;
+  deployment_id: string;
+  name: string;
+  description?: string;
+  is_active: boolean;
+  events: WebhookEventDefinition[];
+  webhook_url: string;
+  webhook_secret?: string;
+  created_at: string;
+  updated_at: string;
 }
 
+/**
+ * Webhook event definition
+ */
 export interface WebhookEventDefinition {
-    name: string;
-    description: string;
-    schema?: any;
+  id: string;
+  event_name: string;
+  event_type: string;
+  filters?: WebhookEventFilter[];
 }
 
-export interface WebhookAppEvent {
-    deployment_id: string;
-    app_name: string;
-    event_name: string;
-    description?: string;
-    schema?: any;
-    created_at: string;
+/**
+ * Webhook event filter
+ */
+export interface WebhookEventFilter {
+  field: string;
+  operator: 'equals' | 'contains' | 'starts_with' | 'ends_with' | 'regex';
+  value: string;
 }
 
-export interface WebhookEndpoint {
-    id: string;
-    deployment_id: string;
-    app_name: string;
-    url: string;
-    description?: string;
-    headers?: any;
-    is_active: boolean;
-    signing_secret?: string;
-    max_retries: number;
-    timeout_seconds: number;
-    failure_count: number;
-    last_failure_at?: string;
-    auto_disabled: boolean;
-    auto_disabled_at?: string;
-    created_at: string;
-    updated_at: string;
-    subscriptions?: WebhookEndpointSubscription[];
-}
+/**
+ * HTTP method for webhook triggers
+ */
+export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
-export interface WebhookEndpointSubscription {
-    endpoint_id: string;
-    deployment_id: string;
-    app_name: string;
-    event_name: string;
-    filter_rules?: any;
-    created_at: string;
-}
-
-export interface EventSubscription {
-    event_name: string;
-    filter_rules?: any;
-}
-
-export interface ListWebhookAppsQuery {
-    include_inactive?: boolean;
-}
-
-export interface ListWebhookAppsResponse {
-    apps: WebhookApp[];
-    total: number;
-}
-
+/**
+ * Request to create a webhook app
+ */
 export interface CreateWebhookAppRequest {
-    name: string;
-    description?: string;
-    events: WebhookEventDefinition[];
+  name: string;
+  description?: string;
+  is_active?: boolean;
+  /** Events for this webhook (required, use [] if none) */
+  events: WebhookEventDefinition[];
+  webhook_url: string;
+  webhook_secret?: string;
 }
 
+/**
+ * Request to update a webhook app
+ */
 export interface UpdateWebhookAppRequest {
-    name?: string;
-    description?: string;
-    is_active?: boolean;
+  name?: string;
+  description?: string;
+  is_active?: boolean;
+  events?: WebhookEventDefinition[];
+  webhook_url?: string;
+  webhook_secret?: string;
 }
 
-export interface GetAvailableEventsResponse {
-    events: WebhookAppEvent[];
+/**
+ * Request to trigger a webhook
+ */
+export interface TriggerWebhookRequest {
+  event_name: string;
+  event_type: string;
+  entity_id: string;
+  data: Record<string, unknown>;
 }
 
-export interface ListWebhookEndpointsQuery {
-    include_inactive?: boolean;
-    limit?: number;
-    offset?: number;
+/**
+ * Webhook delivery attempt
+ */
+export interface WebhookDeliveryAttempt {
+  id: string;
+  webhook_app_id: string;
+  event_id: string;
+  status: 'pending' | 'success' | 'failed';
+  http_status_code?: number;
+  response_body?: string;
+  attempted_at: string;
 }
 
-export interface ListWebhookEndpointsResponse {
-    endpoints: WebhookEndpoint[];
-    count: number;
-    limit: number;
-    offset: number;
-    has_more: boolean;
+/**
+ * Webhook analytics
+ */
+export interface WebhookAnalytics {
+  total_deliveries: number;
+  successful_deliveries: number;
+  failed_deliveries: number;
+  avg_response_time_ms: number;
 }
 
+/**
+ * Rate limiting configuration
+ */
+export interface RateLimitConfig {
+  duration_ms: number;
+  max_requests: number;
+}
+
+/**
+ * Webhook endpoint
+ */
+export interface WebhookEndpoint {
+  id: string;
+  webhook_app_id: string;
+  url: string;
+  description?: string;
+  event_types: string[];
+  is_active: boolean;
+  rate_limit_config?: RateLimitConfig | null;
+  created_at: string;
+  updated_at: string;
+}
+
+/**
+ * Webhook delivery
+ */
+export interface WebhookDelivery {
+  id: string;
+  webhook_app_id: string;
+  endpoint_id: string;
+  event_id: string;
+  status: 'pending' | 'processing' | 'success' | 'failed';
+  http_status_code?: number;
+  response_body?: string;
+  error_message?: string;
+  attempted_at: string;
+  completed_at?: string;
+}
+
+/**
+ * Webhook event
+ */
+export interface WebhookEvent {
+  id: string;
+  event_name: string;
+  event_type: string;
+  entity_id: string;
+  data: Record<string, unknown>;
+  created_at: string;
+}
+
+/**
+ * Webhook stats
+ */
+export interface WebhookStats {
+  total_events: number;
+  total_deliveries: number;
+  successful_deliveries: number;
+  failed_deliveries: number;
+  last_delivery_at?: string;
+}
+
+/**
+ * Webhook timeseries data
+ */
+export interface WebhookTimeseriesData {
+  timestamp: string;
+  count: number;
+  success_count: number;
+  failure_count: number;
+}
+
+/**
+ * Request to create a webhook endpoint
+ */
 export interface CreateWebhookEndpointRequest {
-    app_name: string;
-    url: string;
-    description?: string;
-    subscriptions: EventSubscription[];
-    headers?: any;
-    max_retries?: number;
-    timeout_seconds?: number;
+  url: string;
+  description?: string;
+  event_types: string[];
+  rate_limit_config?: RateLimitConfig | null;
 }
 
+/**
+ * Request to update a webhook endpoint
+ */
 export interface UpdateWebhookEndpointRequest {
-    url?: string;
-    description?: string;
-    headers?: any;
-    max_retries?: number;
-    timeout_seconds?: number;
-    is_active?: boolean;
-    subscriptions?: EventSubscription[];
-}
-
-export interface TriggerWebhookEventRequest {
-    app_name: string;
-    event_name: string;
-    payload: any;
-    filter_context?: any;
-}
-
-export interface TriggerWebhookEventResponse {
-    delivery_ids: number[];
-    filtered_count: number;
-    delivered_count: number;
-}
-
-export interface WebhookEventTrigger {
-    event_name: string;
-    payload: any;
-    filter_context?: any;
-}
-
-export interface BatchTriggerWebhookEventsRequest {
-    app_name: string;
-    events: WebhookEventTrigger[];
-}
-
-export type ReplayWebhookDeliveryRequest =
-    | {
-        delivery_ids: string[];
-        include_successful?: boolean;
-    }
-    | {
-        start_date: string;
-        end_date?: string;
-        include_successful?: boolean;
-    };
-
-export interface ReplayWebhookDeliveryResponse {
-    status: string;
-    message: string;
-}
-
-export interface ReactivateEndpointResponse {
-    success: boolean;
-    message: string;
-}
-
-export interface TestWebhookEndpointRequest {
-    event_name: string;
-    payload?: any;
-}
-
-export interface TestWebhookEndpointResponse {
-    success: boolean;
-    status_code: number;
-    response_time_ms: number;
-    response_body?: string;
-    error?: string;
-}
-
-export interface WebhookAnalyticsQuery {
-    app_id?: number;
-    endpoint_id?: number;
-    start_date?: string;
-    end_date?: string;
-}
-
-export type TimeseriesInterval = 'minute' | 'hour' | 'day' | 'week' | 'month';
-
-export interface WebhookTimeseriesQuery {
-    app_id?: number;
-    endpoint_id?: number;
-    interval?: TimeseriesInterval;
-    start_date?: string;
-    end_date?: string;
-}
-
-export interface WebhookAnalyticsResult {
-    total_events: number;
-    total_deliveries: number;
-    successful_deliveries: number;
-    failed_deliveries: number;
-    filtered_deliveries: number;
-    avg_response_time_ms?: number;
-    p50_response_time_ms?: number;
-    p95_response_time_ms?: number;
-    p99_response_time_ms?: number;
-    success_rate: number;
-    top_events: EventCount[];
-    endpoint_performance: EndpointPerformance[];
-    failure_reasons: FailureReason[];
-}
-
-export interface EventCount {
-    event_name: string;
-    count: number;
-}
-
-export interface EndpointPerformance {
-    endpoint_id: number;
-    endpoint_url: string;
-    total_attempts: number;
-    successful_attempts: number;
-    failed_attempts: number;
-    avg_response_time_ms?: number;
-    success_rate: number;
-}
-
-export interface FailureReason {
-    reason: string;
-    count: number;
-}
-
-export interface WebhookTimeseriesResult {
-    data: TimeseriesPoint[];
-    interval: string;
-}
-
-export interface TimeseriesPoint {
-    timestamp: string;
-    total_events: number;
-    total_deliveries: number;
-    successful_deliveries: number;
-    failed_deliveries: number;
-    filtered_deliveries: number;
-    avg_response_time_ms?: number;
-    success_rate: number;
-}
-
-export interface GetAppWebhookDeliveriesQuery {
-    endpoint_id?: number;
-    event_name?: string;
-    status?: string;
-    limit?: number;
-    offset?: number;
-    since?: string;
-    until?: string;
-}
-
-export interface WebhookDeliveryListResponse {
-    delivery_id: string;
-    deployment_id: string;
-    app_name: string;
-    endpoint_id: string;
-    endpoint_url: string;
-    event_name: string;
-    status: string;
-    http_status_code?: number;
-    response_time_ms?: number;
-    attempt_number: number;
-    max_attempts: number;
-    error_message?: string;
-    filtered_reason?: string;
-    timestamp: string;
-}
-
-export interface WebhookDeliveryDetails extends WebhookDeliveryListResponse {
-    payload_s3_key: string;
-    response_body?: string;
-    response_headers?: any;
-    payload?: any;
+  url?: string;
+  description?: string;
+  event_types?: string[];
+  is_active?: boolean;
+  rate_limit_config?: RateLimitConfig | null;
 }

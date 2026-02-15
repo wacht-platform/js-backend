@@ -1,105 +1,199 @@
+/**
+ * User model
+ * Generated from OpenAPI spec - matches backend API exactly
+ */
 export interface User {
-    id: string;
-    created_at: string;
-    updated_at: string;
-    first_name: string;
-    last_name: string;
-    username?: string;
-    profile_picture_url: string;
-    primary_email_address?: string;
-    primary_phone_number?: string;
+  id: string;
+  created_at: string;
+  updated_at: string;
+  first_name: string;
+  last_name: string;
+  username?: string;
+  profile_picture_url: string;
+  primary_email_address?: string;
+  primary_phone_number?: string;
 }
 
+/**
+ * Request to create a user
+ */
 export interface CreateUserRequest {
-    first_name: string;
-    last_name: string;
-    email_address?: string;
-    phone_number?: string;
-    username?: string;
-    password?: string;
-    skip_password_check?: boolean;
+  first_name: string;
+  last_name: string;
+  email_address?: string;
+  phone_number?: string;
+  username?: string;
+  password?: string;
+  /** Skip password validation check (defaults to false) */
+  skip_password_check?: boolean;
+  /** Note: profile_image is multipart/form-data only */
 }
 
+/**
+ * Request to update a user
+ */
 export interface UpdateUserRequest {
-    first_name?: string;
-    last_name?: string;
-    username?: string;
-    public_metadata?: any;
-    private_metadata?: any;
+  first_name?: string;
+  last_name?: string;
+  username?: string;
+  public_metadata?: Record<string, unknown>;
+  private_metadata?: Record<string, unknown>;
+  disabled?: boolean;
+  /** Note: profile_image is multipart/form-data only */
 }
 
+/**
+ * Request to update password
+ */
 export interface UpdatePasswordRequest {
-    new_password: string;
-    skip_password_check?: boolean;
+  new_password: string;
+  skip_password_check?: boolean;
 }
 
-export interface InviteUserRequest {
-    first_name: string;
-    last_name: string;
-    email_address: string;
-    expiry_days?: number;
-}
-
-export interface UserInvitation {
-    id: string;
-    created_at: string;
-    updated_at: string;
-    deployment_id: string;
-    first_name: string;
-    last_name: string;
-    email_address: string;
-    token: string;
-    expiry: string;
-}
-
-export interface WaitlistUser {
-    id: string;
-    created_at: string;
-    updated_at: string;
-    deployment_id: string;
-    email_address: string;
-    first_name?: string;
-    last_name?: string;
-}
-
+/**
+ * Email address model
+ * Matches OpenAPI UserEmailAddress schema
+ */
 export interface UserEmail {
-    id: string;
-    email: string;
-    is_verified: boolean;
-    is_primary: boolean;
+  id: string;
+  created_at: string;
+  updated_at: string;
+  deployment_id: string;
+  user_id: string;
+  email: string;
+  is_primary: boolean;
+  verified: boolean;  // Note: "verified" not "is_verified" in OpenAPI
+  verified_at: string;
+  verification_strategy: VerificationStrategy;
 }
 
+/**
+ * Verification strategy enum
+ */
+export type VerificationStrategy =
+  | 'otp'
+  | 'oauth_google'
+  | 'oauth_github'
+  | 'oauth_microsoft'
+  | 'oauth_facebook'
+  | 'oauth_linkedin'
+  | 'oauth_discord'
+  | 'oauth_apple';
+
+/**
+ * Request to add an email
+ */
+export interface AddEmailRequest {
+  email: string;
+  verification_strategy?: VerificationStrategy;
+}
+
+/**
+ * Request to update an email
+ */
+export interface UpdateEmailRequest {
+  email?: string;
+  is_primary?: boolean;
+}
+
+/**
+ * Phone number model
+ * Matches OpenAPI UserPhoneNumber schema
+ */
 export interface UserPhone {
-    id: string;
-    phone_number: string;
-    is_verified: boolean;
-    is_primary: boolean;
+  id: string;
+  created_at: string;
+  updated_at: string;
+  user_id: string;
+  phone_number: string;
+  country_code: string;
+  verified: boolean;  // Note: "verified" not "is_verified" in OpenAPI
+  verified_at: string;
 }
 
-export interface UserListResponse {
-    data: User[];
-    has_more: boolean;
+/**
+ * Request to add a phone number
+ */
+export interface AddPhoneRequest {
+  phone_number: string;
+  country_code: string;
 }
 
-export interface UserDetailsResponse {
-    user: User;
-    organizations: any[];
-    workspaces: any[];
+/**
+ * Request to update a phone number
+ */
+export interface UpdatePhoneRequest {
+  phone_number?: string;
+  country_code?: string;
+  verified?: boolean;
+  is_primary?: boolean;
 }
 
-export interface InvitationListResponse {
-    data: UserInvitation[];
-    has_more: boolean;
+/**
+ * Deployment invitation model
+ */
+export interface DeploymentInvitation {
+  id: string;
+  created_at: string;
+  updated_at: string;
+  deployment_id: string;
+  first_name: string;
+  last_name: string;
+  email_address: string;
+  token: string;
+  expiry: string;
 }
 
-export interface WaitlistResponse {
-    data: WaitlistUser[];
-    has_more: boolean;
+/**
+ * Request to invite a user
+ */
+export interface InviteUserRequest {
+  first_name: string;
+  last_name: string;
+  email_address: string;
 }
 
-export interface ListUsersOptions {
-    page?: number;
-    per_page?: number;
-    search?: string;
-    is_active?: boolean;
+/**
+ * Deployment waitlist user model
+ */
+export interface DeploymentWaitlistUser {
+  id: string;
+  created_at: string;
+  updated_at: string;
+  deployment_id: string;
+  email_address: string;
+  first_name?: string;
+  last_name?: string;
+}
+
+/**
+ * User social connection model
+ */
+export interface UserSocialConnection {
+  id: string;
+  created_at: string;
+  updated_at: string;
+  user_id: string;
+  user_email_address_id: string;
+  provider: string;
+  email_address: string;
+}
+
+/**
+ * Session ticket response
+ */
+export interface SessionTicketResponse {
+  ticket: string;
+  expires_at: number;
+}
+
+/**
+ * Session ticket request
+ */
+export interface CreateSessionTicketRequest {
+  ticket_type: 'impersonation' | 'agent_access';
+  user_id?: string;
+  agent_ids?: string[];
+  context_group?: string;
+  expires_in?: number;
 }

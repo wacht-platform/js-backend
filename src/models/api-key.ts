@@ -1,96 +1,167 @@
-export type RateLimitUnit = 'second' | 'minute' | 'hour' | 'day';
-export type RateLimitMode = 'per_key' | 'per_ip' | 'per_key_and_ip';
+/**
+ * API Auth App model
+ */
+export interface ApiAuthApp {
+  id: string;
+  deployment_id: string;
+  app_slug: string;
+  name: string;
+  key_prefix: string;
+  description?: string;
+  is_active: boolean;
+  rate_limits?: RateLimit[];
+  created_at: string;
+  updated_at: string;
+}
 
+/**
+ * Rate limit configuration
+ */
 export interface RateLimit {
-    unit: RateLimitUnit;
-    duration: number;
-    max_requests: number;
-    mode?: RateLimitMode;
+  unit: 'millisecond' | 'second' | 'minute' | 'hour' | 'day';
+  duration: number;
+  max_requests: number;
+  mode?: 'per_app' | 'per_key' | 'per_key_and_ip' | 'per_app_and_ip';
 }
 
-export interface ApiKeyApp {
-    id: string;
-    deployment_id: string;
-    name: string;
-    description?: string;
-    is_active: boolean;
-    rate_limits: RateLimit[];
-    created_at: string;
-    updated_at: string;
+export type AuthzPrincipalType = 'api_key';
+export type AuthzDenyReason = 'permission_denied' | 'rate_limited';
+
+export interface AuthzPrincipal {
+  type: AuthzPrincipalType;
+  value: string;
 }
 
+export interface AuthzCheckRequest {
+  principal: AuthzPrincipal;
+  resource: string;
+  method: string;
+  client_ip?: string;
+  user_agent?: string;
+  required_permissions?: string[];
+}
+
+export interface AuthzIdentity {
+  key_id: string;
+  deployment_id: string;
+  app_id: string;
+  app_slug: string;
+  key_name: string;
+  organization_id?: string;
+  workspace_id?: string;
+  organization_membership_id?: string;
+  workspace_membership_id?: string;
+}
+
+export interface AuthzRateLimitState {
+  rule: string;
+  remaining: number;
+  limit: number;
+}
+
+export interface AuthzCheckResponse {
+  request_id: string;
+  allowed: boolean;
+  reason?: AuthzDenyReason;
+  blocked_rule?: string;
+  identity?: AuthzIdentity;
+  permissions: string[];
+  metadata?: Record<string, unknown>;
+  rate_limits: AuthzRateLimitState[];
+  retry_after?: number;
+  headers: Record<string, string>;
+}
+
+/**
+ * API Key model
+ */
 export interface ApiKey {
-    id: string;
-    app_id: string;
-    deployment_id: string;
-    name: string;
-    key_prefix: string;
-    key_suffix: string;
-    permissions: string[];
-    metadata: any;
-    expires_at?: string;
-    last_used_at?: string;
-    is_active: boolean;
-    created_at: string;
-    updated_at: string;
-    revoked_at?: string;
-    revoked_reason?: string;
+  id: string;
+  app_id: string; // TODO: remove when switching to app_slug only
+  deployment_id: string;
+  app_slug: string;
+  name: string;
+  key_prefix: string;
+  key_suffix: string;
+  permissions: string[];
+  org_role_permissions: string[];
+  workspace_role_permissions: string[];
+  metadata?: Record<string, unknown>;
+  organization_id?: string;
+  workspace_id?: string;
+  organization_membership_id?: string;
+  workspace_membership_id?: string;
+  expires_at?: string;
+  last_used_at?: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+  revoked_at?: string;
+  revoked_reason?: string;
 }
 
+/**
+ * API Key with secret (returned on creation/rotation)
+ */
 export interface ApiKeyWithSecret {
-    id: string;
-    app_id: string;
-    deployment_id: string;
-    name: string;
-    key_prefix: string;
-    key_suffix: string;
-    permissions: string[];
-    metadata: any;
-    expires_at?: string;
-    last_used_at?: string;
-    is_active: boolean;
-    created_at: string;
-    updated_at: string;
-    revoked_at?: string;
-    revoked_reason?: string;
-    secret: string;
+  key: ApiKey;
+  secret: string;
 }
 
-export interface CreateApiKeyAppRequest {
-    name: string;
-    description?: string;
-    rate_limits?: RateLimit[];
+/**
+ * Request to create an API auth app
+ */
+export interface CreateApiAuthAppRequest {
+  app_slug: string;
+  name: string;
+  key_prefix: string;
+  description?: string;
+  rate_limits?: RateLimit[];
 }
 
-export interface UpdateApiKeyAppRequest {
-    name?: string;
-    description?: string;
-    is_active?: boolean;
-    rate_limits?: RateLimit[];
+/**
+ * Request to update an API auth app
+ */
+export interface UpdateApiAuthAppRequest {
+  name?: string;
+  key_prefix?: string;
+  description?: string;
+  is_active?: boolean;
+  rate_limits?: RateLimit[];
 }
 
+/**
+ * Request to create an API key
+ */
 export interface CreateApiKeyRequest {
-    name: string;
-    key_prefix: string;
-    permissions?: string[];
-    expires_at?: string;
-    metadata?: any;
+  name: string;
+  permissions?: string[];
+  organization_membership_id?: string;
+  workspace_membership_id?: string;
+  metadata?: Record<string, unknown>;
+  expires_at?: string;
 }
 
+/**
+ * Request to revoke an API key
+ */
 export interface RevokeApiKeyRequest {
-    key_id: string;
-    reason?: string;
+  key_id: string;
+  reason?: string;
 }
 
+/**
+ * Request to rotate an API key
+ */
 export interface RotateApiKeyRequest {
-    key_id: string;
+  key_id: string;
 }
 
-export interface ListApiKeyAppsResponse {
-    total: number;
-    apps: ApiKeyApp[];
-}
-
-export interface ListApiKeysResponse {
-    keys: ApiKey[];
+/**
+ * API Key scope information
+ */
+export interface ApiKeyScopeInfo {
+  scope: string;
+  description: string;
+  category: string;
 }

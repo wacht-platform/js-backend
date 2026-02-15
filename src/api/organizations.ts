@@ -1,211 +1,194 @@
-import { getClient } from '../client';
-import {
-    Organization,
-    CreateOrganizationRequest,
-    UpdateOrganizationRequest,
-    OrganizationMember,
-    AddOrganizationMemberRequest,
-    UpdateOrganizationMemberRequest,
-    OrganizationRole,
-    CreateOrganizationRoleRequest,
-    UpdateOrganizationRoleRequest,
-    OrganizationListResponse,
-    OrganizationMemberListResponse,
-    OrganizationRoleListResponse,
-    ListOrganizationsOptions,
-} from '../models/organization';
+import { getClient, type PaginatedResponse, type ListOptions } from '../client';
+import type {
+  Organization,
+  CreateOrganizationRequest,
+  UpdateOrganizationRequest,
+  OrganizationMember,
+  AddOrganizationMemberRequest,
+  UpdateOrganizationMemberRequest,
+  OrganizationRole,
+  CreateOrganizationRoleRequest,
+  UpdateOrganizationRoleRequest,
+  Workspace,
+  CreateWorkspaceRequest,
+} from '../models';
 
 /**
- * Fetch organizations
+ * List organizations
  */
-export async function fetchOrganizations(
-    options?: ListOrganizationsOptions
-): Promise<OrganizationListResponse> {
-    const client = getClient();
-    const response = await client.get<OrganizationListResponse>('/organizations', {
-        params: options,
-    });
-    return response.data;
+export async function listOrganizations(
+  options?: ListOptions
+): Promise<PaginatedResponse<Organization>> {
+  const client = getClient();
+  const params = options
+    ? `?limit=${options.limit || 50}&offset=${options.offset || 0}`
+    : '';
+  return client.get<PaginatedResponse<Organization>>(`/organizations${params}`);
 }
 
 /**
- * Create organization
+ * Get an organization by ID
+ */
+export async function getOrganization(organizationId: string): Promise<Organization> {
+  const client = getClient();
+  return client.get<Organization>(`/organizations/${organizationId}`);
+}
+
+/**
+ * Create an organization
  */
 export async function createOrganization(
-    request: CreateOrganizationRequest
+  request: CreateOrganizationRequest
 ): Promise<Organization> {
-    const client = getClient();
-    const FormData = require('form-data');
-    const formData = new FormData();
-
-    formData.append('name', request.name);
-    if (request.description) formData.append('description', request.description);
-    if (request.image_url) formData.append('image_url', request.image_url);
-    if (request.public_metadata) {
-        formData.append('public_metadata', JSON.stringify(request.public_metadata));
-    }
-    if (request.private_metadata) {
-        formData.append('private_metadata', JSON.stringify(request.private_metadata));
-    }
-
-    const response = await client.post<Organization>('/organizations', formData, {
-        headers: formData.getHeaders(),
-    });
-    return response.data;
+  const client = getClient();
+  return client.post<Organization>('/organizations', request);
 }
 
 /**
- * Fetch organization
- */
-export async function fetchOrganization(organizationId: string): Promise<Organization> {
-    const client = getClient();
-    const response = await client.get<Organization>(`/organizations/${organizationId}`);
-    return response.data;
-}
-
-/**
- * Update organization
+ * Update an organization
  */
 export async function updateOrganization(
-    organizationId: string,
-    request: UpdateOrganizationRequest
+  organizationId: string,
+  request: UpdateOrganizationRequest
 ): Promise<Organization> {
-    const client = getClient();
-    const FormData = require('form-data');
-    const formData = new FormData();
-
-    if (request.name) formData.append('name', request.name);
-    if (request.description) formData.append('description', request.description);
-    if (request.image_url) formData.append('image_url', request.image_url);
-    if (request.public_metadata) {
-        formData.append('public_metadata', JSON.stringify(request.public_metadata));
-    }
-    if (request.private_metadata) {
-        formData.append('private_metadata', JSON.stringify(request.private_metadata));
-    }
-
-    const response = await client.patch<Organization>(
-        `/organizations/${organizationId}`,
-        formData,
-        {
-            headers: formData.getHeaders(),
-        }
-    );
-    return response.data;
+  const client = getClient();
+  return client.patch<Organization>(`/organizations/${organizationId}`, request);
 }
 
 /**
- * Delete organization
+ * Delete an organization
  */
 export async function deleteOrganization(organizationId: string): Promise<void> {
-    const client = getClient();
-    await client.delete(`/organizations/${organizationId}`);
+  const client = getClient();
+  return client.delete<void>(`/organizations/${organizationId}`);
 }
 
 /**
- * Add organization member
+ * List organization members
+ */
+export async function listOrganizationMembers(
+  organizationId: string,
+  options?: ListOptions
+): Promise<PaginatedResponse<OrganizationMember>> {
+  const client = getClient();
+  const params = options
+    ? `?limit=${options.limit || 50}&offset=${options.offset || 0}`
+    : '';
+  return client.get<PaginatedResponse<OrganizationMember>>(
+    `/organizations/${organizationId}/members${params}`
+  );
+}
+
+/**
+ * Add a member to an organization
  */
 export async function addOrganizationMember(
-    organizationId: string,
-    request: AddOrganizationMemberRequest
+  organizationId: string,
+  request: AddOrganizationMemberRequest
 ): Promise<OrganizationMember> {
-    const client = getClient();
-    const response = await client.post<OrganizationMember>(
-        `/organizations/${organizationId}/members`,
-        request
-    );
-    return response.data;
+  const client = getClient();
+  return client.post<OrganizationMember>(
+    `/organizations/${organizationId}/members`,
+    request
+  );
 }
 
 /**
- * Update organization member
+ * Update an organization member
  */
 export async function updateOrganizationMember(
-    organizationId: string,
-    membershipId: string,
-    request: UpdateOrganizationMemberRequest
+  organizationId: string,
+  memberId: string,
+  request: UpdateOrganizationMemberRequest
 ): Promise<OrganizationMember> {
-    const client = getClient();
-    const response = await client.patch<OrganizationMember>(
-        `/organizations/${organizationId}/members/${membershipId}`,
-        request
-    );
-    return response.data;
+  const client = getClient();
+  return client.patch<OrganizationMember>(
+    `/organizations/${organizationId}/members/${memberId}`,
+    request
+  );
 }
 
 /**
- * Remove organization member
+ * Remove a member from an organization
  */
 export async function removeOrganizationMember(
-    organizationId: string,
-    membershipId: string
+  organizationId: string,
+  memberId: string
 ): Promise<void> {
-    const client = getClient();
-    await client.delete(`/organizations/${organizationId}/members/${membershipId}`);
+  const client = getClient();
+  return client.delete<void>(
+    `/organizations/${organizationId}/members/${memberId}`
+  );
 }
 
 /**
- * Fetch organization members
+ * List organization roles
  */
-export async function fetchOrganizationMembers(
-    organizationId: string,
-    options?: { limit?: number; offset?: number }
-): Promise<OrganizationMemberListResponse> {
-    const client = getClient();
-    const response = await client.get<OrganizationMemberListResponse>(
-        `/organizations/${organizationId}/members`,
-        { params: options }
-    );
-    return response.data;
+export async function listOrganizationRoles(
+  organizationId: string,
+  options?: ListOptions
+): Promise<PaginatedResponse<OrganizationRole>> {
+  const client = getClient();
+  const params = options
+    ? `?limit=${options.limit || 50}&offset=${options.offset || 0}`
+    : '';
+  return client.get<PaginatedResponse<OrganizationRole>>(
+    `/organizations/${organizationId}/roles${params}`
+  );
 }
 
 /**
- * Fetch organization roles
- */
-export async function fetchOrganizationRoles(): Promise<OrganizationRoleListResponse> {
-    const client = getClient();
-    const response = await client.get<OrganizationRoleListResponse>('/organization-roles');
-    return response.data;
-}
-
-/**
- * Create organization role
+ * Create an organization role
  */
 export async function createOrganizationRole(
-    organizationId: string,
-    request: CreateOrganizationRoleRequest
+  organizationId: string,
+  request: CreateOrganizationRoleRequest
 ): Promise<OrganizationRole> {
-    const client = getClient();
-    const response = await client.post<OrganizationRole>(
-        `/organizations/${organizationId}/roles`,
-        request
-    );
-    return response.data;
+  const client = getClient();
+  return client.post<OrganizationRole>(
+    `/organizations/${organizationId}/roles`,
+    request
+  );
 }
 
 /**
- * Update organization role
+ * Update an organization role
  */
 export async function updateOrganizationRole(
-    organizationId: string,
-    roleId: string,
-    request: UpdateOrganizationRoleRequest
+  organizationId: string,
+  roleId: string,
+  request: UpdateOrganizationRoleRequest
 ): Promise<OrganizationRole> {
-    const client = getClient();
-    const response = await client.patch<OrganizationRole>(
-        `/organizations/${organizationId}/roles/${roleId}`,
-        request
-    );
-    return response.data;
+  const client = getClient();
+  return client.patch<OrganizationRole>(
+    `/organizations/${organizationId}/roles/${roleId}`,
+    request
+  );
 }
 
 /**
- * Delete organization role
+ * Delete an organization role
  */
 export async function deleteOrganizationRole(
-    organizationId: string,
-    roleId: string
+  organizationId: string,
+  roleId: string
 ): Promise<void> {
-    const client = getClient();
-    await client.delete(`/organizations/${organizationId}/roles/${roleId}`);
+  const client = getClient();
+  return client.delete<void>(
+    `/organizations/${organizationId}/roles/${roleId}`
+  );
+}
+
+/**
+ * Create a workspace for an organization
+ */
+export async function createWorkspaceForOrganization(
+  organizationId: string,
+  request: CreateWorkspaceRequest
+): Promise<Workspace> {
+  const client = getClient();
+  return client.post<Workspace>(
+    `/organizations/${organizationId}/workspaces`,
+    request
+  );
 }

@@ -1,133 +1,174 @@
-import axios, { AxiosInstance } from 'axios';
-import { WachtError, ApiError } from './error';
+import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
+import { parseApiError, WachtError } from './error';
 
+/**
+ * Configuration options for the Wacht SDK client
+ */
 export interface WachtConfig {
-    apiKey: string;
-    baseUrl?: string;
-    frontendApiUrl?: string;
-    timeout?: number;
-    userAgent?: string;
-    publicSigningKey?: string;
-}
-
-interface PublicKeyResponse {
-    data: {
-        id: string;
-        created_at: string;
-        updated_at: string;
-        deployment_id: number;
-        public_key: string;
-    };
-}
-
-let globalClient: AxiosInstance | null = null;
-let globalConfig: WachtConfig | null = null;
-
-/**
- * Fetch the public signing key from the frontend API URL.
- * @param frontendApiUrl The frontend API URL to fetch the key from
- * @returns The public key string
- */
-export async function fetchPublicKey(frontendApiUrl: string): Promise<string> {
-    try {
-        const url = `${frontendApiUrl}/.well-known/jwk`;
-        const response = await axios.get<PublicKeyResponse>(url);
-        return response.data.data.public_key;
-    } catch (error) {
-        if (axios.isAxiosError(error)) {
-            throw new WachtError(
-                `Failed to fetch public key from ${frontendApiUrl}: ${error.message}`
-            );
-        }
-        throw error;
-    }
+  /** Base URL of the Wacht API (default: https://api.wacht.io) */
+  baseUrl?: string;
+  /** API key for authentication */
+  apiKey: string;
+  /** Request timeout in milliseconds (default: 30000) */
+  timeout?: number;
+  /** Additional headers to include in all requests */
+  headers?: Record<string, string>;
 }
 
 /**
- * Initialize the Wacht SDK with the provided configuration.
- * If frontendApiUrl is provided and publicSigningKey is not, the public key will be automatically fetched.
- * @param config Configuration object
+ * Paginated response wrapper
  */
-export async function init(config: WachtConfig): Promise<void> {
-    globalConfig = {
-        baseUrl: 'https://api.wacht.dev',
-        timeout: 30000,
-        userAgent: 'wacht-js/1.0.0',
-        ...config,
-    };
+export interface PaginatedResponse<T> {
+  /** The data items */
+  data: T[];
+  /** Whether there are more items available */
+  has_more: boolean;
+  /** The limit used for this page */
+  limit?: number;
+  /** The offset used for this page */
+  offset?: number;
+}
 
-    // Auto-fetch public key if frontendApiUrl is provided but publicSigningKey is not
-    if (globalConfig.frontendApiUrl && !globalConfig.publicSigningKey) {
-        globalConfig.publicSigningKey = await fetchPublicKey(globalConfig.frontendApiUrl);
-    }
+/**
+ * List query options for pagination
+ */
+export interface ListOptions {
+  /** Maximum number of items to return */
+  limit?: number;
+  /** Number of items to skip */
+  offset?: number;
+}
 
-    const client = axios.create({
-        baseURL: globalConfig.baseUrl,
-        timeout: globalConfig.timeout,
-        headers: {
-            'Authorization': `Bearer ${globalConfig.apiKey}`,
-            'User-Agent': globalConfig.userAgent,
-            'Content-Type': 'application/json',
-        },
+/**
+ * Wacht SDK Client
+ */
+export class WachtClient {
+  private readonly axiosInstance: AxiosInstance;
+  private readonly baseUrl: string;
+
+  constructor(config: WachtConfig) {
+    this.baseUrl = config.baseUrl || 'https://api.wacht.io';
+
+    this.axiosInstance = axios.create({
+      baseURL: this.baseUrl,
+      timeout: config.timeout || 30000,
+      headers: {
+        'Authorization': `Bearer ${config.apiKey}`,
+        'Content-Type': 'application/json',
+        ...config.headers,
+      },
     });
 
-    // Add response interceptor for error handling
-    client.interceptors.response.use(
-        (response) => response,
-        (error) => {
-            if (error.response) {
-                throw new ApiError(
-                    error.response.status,
-                    error.response.data?.message || error.message,
-                    error.response.data
-                );
-            }
-            throw new WachtError(error.message);
+    // Response interceptor for error handling
+    this.axiosInstance.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        if (error.response) {
+          const { status, data } = error.response;
+          throw parseApiError(status, data);
         }
+        if (error.request) {
+          throw new WachtError('No response received from server');
+        }
+        throw new WachtError(error.message);
+      }
     );
+  }
 
-    globalClient = client;
+  /**
+   * Make a GET request
+   */
+  async get<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
+    const response = await this.axiosInstance.get<T, AxiosResponse<T>>(
+      url,
+      config
+    );
+    return response.data;
+  }
+
+  /**
+   * Make a POST request
+   */
+  async post<T>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> {
+    const response = await this.axiosInstance.post<T, AxiosResponse<T>>(
+      url,
+      data,
+      config
+    );
+    return response.data;
+  }
+
+  /**
+   * Make a PUT request
+   */
+  async put<T>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> {
+    const response = await this.axiosInstance.put<T, AxiosResponse<T>>(
+      url,
+      data,
+      config
+    );
+    return response.data;
+  }
+
+  /**
+   * Make a PATCH request
+   */
+  async patch<T>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> {
+    const response = await this.axiosInstance.patch<T, AxiosResponse<T>>(
+      url,
+      data,
+      config
+    );
+    return response.data;
+  }
+
+  /**
+   * Make a DELETE request
+   */
+  async delete<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
+    const response = await this.axiosInstance.delete<T, AxiosResponse<T>>(
+      url,
+      config
+    );
+    return response.data;
+  }
+
+  /**
+   * Get the base URL
+   */
+  getBaseUrl(): string {
+    return this.baseUrl;
+  }
 }
 
 /**
- * Initialize the Wacht SDK from environment variables.
- * Automatically fetches the public key if WACHT_FRONTEND_API_URL is set.
+ * Global client instance (lazy initialized)
  */
-export async function initFromEnv(): Promise<void> {
-    const apiKey = process.env.WACHT_API_KEY;
-    if (!apiKey) {
-        throw new Error('WACHT_API_KEY environment variable is not set');
-    }
+let globalClient: WachtClient | null = null;
 
-    await init({
-        apiKey,
-        baseUrl: process.env.WACHT_API_URL,
-        frontendApiUrl: process.env.WACHT_FRONTEND_API_URL,
-    });
-}
-
-export function getClient(): AxiosInstance {
-    if (!globalClient) {
-        throw new Error('Wacht SDK not initialized. Call init() first');
-    }
-    return globalClient;
-}
-
-export function getConfig(): WachtConfig {
-    if (!globalConfig) {
-        throw new Error('Wacht SDK not initialized. Call init() first');
-    }
-    return { ...globalConfig };
+/**
+ * Initialize the global client
+ */
+export function initClient(config: WachtConfig): void {
+  globalClient = new WachtClient(config);
 }
 
 /**
- * Get the cached public signing key.
- * @returns The public signing key or undefined if not set
+ * Get the global client instance
+ * @throws {Error} If client has not been initialized
  */
-export function getPublicSigningKey(): string | undefined {
-    return globalConfig?.publicSigningKey;
+export function getClient(): WachtClient {
+  if (!globalClient) {
+    throw new Error(
+      'Wacht SDK client not initialized. Call initClient() first.'
+    );
+  }
+  return globalClient;
 }
 
-export function isInitialized(): boolean {
-    return globalClient !== null;
+/**
+ * Check if the global client has been initialized
+ */
+export function isClientInitialized(): boolean {
+  return globalClient !== null;
 }

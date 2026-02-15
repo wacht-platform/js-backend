@@ -1,41 +1,44 @@
 import { getClient } from '../client';
-import {
-    AnalyticsStats,
-    AnalyticsStatsOptions,
-    RecentSignupsResponse,
-} from '../models/analytics';
+import type { AnalyticsStats, RecentSignup, RecentSignupOrganization } from '../models';
 
 /**
- * Fetch analytics statistics
+ * Get analytics summary
  */
-export async function fetchAnalyticsStats(
-    options?: AnalyticsStatsOptions
-): Promise<AnalyticsStats> {
-    const client = getClient();
-    const response = await client.get<AnalyticsStats>('/analytics/stats', {
-        params: options,
-    });
-    return response.data;
+export async function getAnalyticsSummary(): Promise<AnalyticsStats> {
+  const client = getClient();
+  return client.get<AnalyticsStats>('/analytics/summary');
 }
 
 /**
- * Fetch recent signups
+ * Get recent signups
  */
-export async function fetchRecentSignups(limit?: number): Promise<RecentSignupsResponse> {
-    const client = getClient();
-    const response = await client.get<RecentSignupsResponse>('/analytics/recent-signups', {
-        params: { limit },
-    });
-    return response.data;
+export async function getRecentSignups(
+  options?: { limit?: number; offset?: number }
+): Promise<RecentSignup[]> {
+  const client = getClient();
+  const params = new URLSearchParams();
+  if (options?.limit) params.append('limit', String(options.limit));
+  if (options?.offset !== undefined)
+    params.append('offset', String(options.offset));
+  const queryString = params.toString();
+  return client.get<RecentSignup[]>(
+    `/analytics/recent-signups${queryString ? `?${queryString}` : ''}`
+  );
 }
 
 /**
- * Fetch recent signins
+ * Get recent signins
  */
-export async function fetchRecentSignins(limit?: number): Promise<RecentSignupsResponse> {
-    const client = getClient();
-    const response = await client.get<RecentSignupsResponse>('/analytics/recent-signins', {
-        params: { limit },
-    });
-    return response.data;
+export async function getRecentSignins(
+  options?: { limit?: number; offset?: number }
+): Promise<RecentSignup[]> {
+  const client = getClient();
+  const params = new URLSearchParams();
+  if (options?.limit) params.append('limit', String(options.limit));
+  if (options?.offset !== undefined)
+    params.append('offset', String(options.offset));
+  const queryString = params.toString();
+  return client.get<RecentSignup[]>(
+    `/analytics/recent-signins${queryString ? `?${queryString}` : ''}`
+  );
 }
