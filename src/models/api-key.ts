@@ -18,14 +18,14 @@ export interface ApiAuthApp {
  * Rate limit configuration
  */
 export interface RateLimit {
-  unit: 'millisecond' | 'second' | 'minute' | 'hour' | 'day';
+  unit: "millisecond" | "second" | "minute" | "hour" | "day";
   duration: number;
   max_requests: number;
-  mode?: 'per_app' | 'per_key' | 'per_key_and_ip' | 'per_app_and_ip';
+  mode?: "per_app" | "per_key" | "per_key_and_ip" | "per_app_and_ip";
 }
 
-export type AuthzPrincipalType = 'api_key';
-export type AuthzDenyReason = 'permission_denied' | 'rate_limited';
+export type AuthzPrincipalType = "api_key" | "oauth_access_token";
+export type AuthzDenyReason = "permission_denied" | "rate_limited";
 
 export interface AuthzPrincipal {
   type: AuthzPrincipalType;
@@ -44,14 +44,37 @@ export interface AuthzCheckRequest {
 export interface AuthzIdentity {
   key_id: string;
   deployment_id: string;
-  app_id: string;
   app_slug: string;
   key_name: string;
+  owner_user_id?: string;
   organization_id?: string;
   workspace_id?: string;
   organization_membership_id?: string;
   workspace_membership_id?: string;
 }
+
+export interface AuthzMetadata {
+  principal_type?: AuthzPrincipalType | string;
+  permissions_checked?: string[];
+  organization_permissions?: string[];
+  workspace_permissions?: string[];
+  scopes?: string[];
+  resource?: string | null;
+  expires_at?: string;
+  [key: string]: unknown;
+}
+
+export interface AuthzApiKeyIdentity extends AuthzIdentity {
+  principal_type: "api_key";
+}
+
+export interface AuthzOauthAccessTokenIdentity extends AuthzIdentity {
+  principal_type: "oauth_access_token";
+}
+
+export type ResolvedAuthzIdentity =
+  | AuthzApiKeyIdentity
+  | AuthzOauthAccessTokenIdentity;
 
 export interface AuthzRateLimitState {
   rule: string;
@@ -66,7 +89,7 @@ export interface AuthzCheckResponse {
   blocked_rule?: string;
   identity?: AuthzIdentity;
   permissions: string[];
-  metadata?: Record<string, unknown>;
+  metadata?: AuthzMetadata;
   rate_limits: AuthzRateLimitState[];
   retry_after?: number;
   headers: Record<string, string>;
@@ -77,7 +100,6 @@ export interface AuthzCheckResponse {
  */
 export interface ApiKey {
   id: string;
-  app_id: string; // TODO: remove when switching to app_slug only
   deployment_id: string;
   app_slug: string;
   name: string;
@@ -155,13 +177,4 @@ export interface RevokeApiKeyRequest {
  */
 export interface RotateApiKeyRequest {
   key_id: string;
-}
-
-/**
- * API Key scope information
- */
-export interface ApiKeyScopeInfo {
-  scope: string;
-  description: string;
-  category: string;
 }

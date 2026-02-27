@@ -1,4 +1,9 @@
-import { getClient, type PaginatedResponse, type ListOptions } from '../client';
+import {
+  getClient,
+  type WachtClient,
+  type PaginatedResponse,
+  type ListOptions,
+} from "../client";
 import type {
   User,
   CreateUserRequest,
@@ -11,43 +16,53 @@ import type {
   AddPhoneRequest,
   UpdatePhoneRequest,
   UserSocialConnection,
-} from '../models';
+} from "../models";
 
 /**
  * List users
  */
 export async function listUsers(
-  options?: ListOptions
+  options?: ListOptions,
+  client?: WachtClient,
 ): Promise<PaginatedResponse<User>> {
-  const client = getClient();
+  const sdkClient = client ?? getClient();
   const params = options
     ? `?limit=${options.limit || 50}&offset=${options.offset || 0}`
-    : '';
-  return client.get<PaginatedResponse<User>>(`/users${params}`);
+    : "";
+  return sdkClient.get<PaginatedResponse<User>>(`/users${params}`);
 }
 
 /**
  * Get a user by ID
  */
-export async function getUser(userId: string): Promise<User> {
-  const client = getClient();
-  return client.get<User>(`/users/${userId}`);
+export async function getUser(
+  userId: string,
+  client?: WachtClient,
+): Promise<User> {
+  const sdkClient = client ?? getClient();
+  return sdkClient.get<User>(`/users/${userId}`);
 }
 
 /**
  * Get a user by email
  */
-export async function getUserByEmail(email: string): Promise<User> {
-  const client = getClient();
-  return client.get<User>(`/users/by-email/${encodeURIComponent(email)}`);
+export async function getUserByEmail(
+  email: string,
+  client?: WachtClient,
+): Promise<User> {
+  const sdkClient = client ?? getClient();
+  return sdkClient.get<User>(`/users/by-email/${encodeURIComponent(email)}`);
 }
 
 /**
  * Create a user
  */
-export async function createUser(request: CreateUserRequest): Promise<User> {
-  const client = getClient();
-  return client.post<User>('/users', request);
+export async function createUser(
+  request: CreateUserRequest,
+  client?: WachtClient,
+): Promise<User> {
+  const sdkClient = client ?? getClient();
+  return sdkClient.post<User>("/users", request);
 }
 
 /**
@@ -55,18 +70,22 @@ export async function createUser(request: CreateUserRequest): Promise<User> {
  */
 export async function updateUser(
   userId: string,
-  request: UpdateUserRequest
+  request: UpdateUserRequest,
+  client?: WachtClient,
 ): Promise<User> {
-  const client = getClient();
-  return client.patch<User>(`/users/${userId}`, request);
+  const sdkClient = client ?? getClient();
+  return sdkClient.patch<User>(`/users/${userId}`, request);
 }
 
 /**
  * Delete a user
  */
-export async function deleteUser(userId: string): Promise<void> {
-  const client = getClient();
-  return client.delete<void>(`/users/${userId}`);
+export async function deleteUser(
+  userId: string,
+  client?: WachtClient,
+): Promise<void> {
+  const sdkClient = client ?? getClient();
+  return sdkClient.delete<void>(`/users/${userId}`);
 }
 
 /**
@@ -74,20 +93,22 @@ export async function deleteUser(userId: string): Promise<void> {
  */
 export async function updatePassword(
   userId: string,
-  request: UpdatePasswordRequest
+  request: UpdatePasswordRequest,
+  client?: WachtClient,
 ): Promise<void> {
-  const client = getClient();
-  return client.post<void>(`/users/${userId}/password`, request);
+  const sdkClient = client ?? getClient();
+  return sdkClient.post<void>(`/users/${userId}/password`, request);
 }
 
 /**
  * List user emails
  */
 export async function listEmails(
-  userId: string
+  userId: string,
+  client?: WachtClient,
 ): Promise<UserEmail[]> {
-  const client = getClient();
-  return client.get<UserEmail[]>(`/users/${userId}/emails`);
+  const sdkClient = client ?? getClient();
+  return sdkClient.get<UserEmail[]>(`/users/${userId}/emails`);
 }
 
 /**
@@ -95,10 +116,11 @@ export async function listEmails(
  */
 export async function addEmail(
   userId: string,
-  request: AddEmailRequest
+  request: AddEmailRequest,
+  client?: WachtClient,
 ): Promise<UserEmail> {
-  const client = getClient();
-  return client.post<UserEmail>(`/users/${userId}/emails`, request);
+  const sdkClient = client ?? getClient();
+  return sdkClient.post<UserEmail>(`/users/${userId}/emails`, request);
 }
 
 /**
@@ -107,12 +129,13 @@ export async function addEmail(
 export async function updateEmail(
   userId: string,
   emailId: string,
-  request: UpdateEmailRequest
+  request: UpdateEmailRequest,
+  client?: WachtClient,
 ): Promise<UserEmail> {
-  const client = getClient();
-  return client.patch<UserEmail>(
+  const sdkClient = client ?? getClient();
+  return sdkClient.patch<UserEmail>(
     `/users/${userId}/emails/${emailId}`,
-    request
+    request,
   );
 }
 
@@ -121,18 +144,22 @@ export async function updateEmail(
  */
 export async function deleteEmail(
   userId: string,
-  emailId: string
+  emailId: string,
+  client?: WachtClient,
 ): Promise<void> {
-  const client = getClient();
-  return client.delete<void>(`/users/${userId}/emails/${emailId}`);
+  const sdkClient = client ?? getClient();
+  return sdkClient.delete<void>(`/users/${userId}/emails/${emailId}`);
 }
 
 /**
  * List user phone numbers
  */
-export async function listPhones(userId: string): Promise<UserPhone[]> {
-  const client = getClient();
-  return client.get<UserPhone[]>(`/users/${userId}/phones`);
+export async function listPhones(
+  userId: string,
+  client?: WachtClient,
+): Promise<UserPhone[]> {
+  const sdkClient = client ?? getClient();
+  return sdkClient.get<UserPhone[]>(`/users/${userId}/phones`);
 }
 
 /**
@@ -140,10 +167,11 @@ export async function listPhones(userId: string): Promise<UserPhone[]> {
  */
 export async function addPhone(
   userId: string,
-  request: AddPhoneRequest
+  request: AddPhoneRequest,
+  client?: WachtClient,
 ): Promise<UserPhone> {
-  const client = getClient();
-  return client.post<UserPhone>(`/users/${userId}/phones`, request);
+  const sdkClient = client ?? getClient();
+  return sdkClient.post<UserPhone>(`/users/${userId}/phones`, request);
 }
 
 /**
@@ -152,12 +180,13 @@ export async function addPhone(
 export async function updatePhone(
   userId: string,
   phoneId: string,
-  request: UpdatePhoneRequest
+  request: UpdatePhoneRequest,
+  client?: WachtClient,
 ): Promise<UserPhone> {
-  const client = getClient();
-  return client.patch<UserPhone>(
+  const sdkClient = client ?? getClient();
+  return sdkClient.patch<UserPhone>(
     `/users/${userId}/phones/${phoneId}`,
-    request
+    request,
   );
 }
 
@@ -166,10 +195,11 @@ export async function updatePhone(
  */
 export async function deletePhone(
   userId: string,
-  phoneId: string
+  phoneId: string,
+  client?: WachtClient,
 ): Promise<void> {
-  const client = getClient();
-  return client.delete<void>(`/users/${userId}/phones/${phoneId}`);
+  const sdkClient = client ?? getClient();
+  return sdkClient.delete<void>(`/users/${userId}/phones/${phoneId}`);
 }
 
 /**
@@ -177,10 +207,11 @@ export async function deletePhone(
  */
 export async function deleteSocialConnection(
   userId: string,
-  connectionId: string
+  connectionId: string,
+  client?: WachtClient,
 ): Promise<void> {
-  const client = getClient();
-  return client.delete<void>(
-    `/users/${userId}/social-connections/${connectionId}`
+  const sdkClient = client ?? getClient();
+  return sdkClient.delete<void>(
+    `/users/${userId}/social-connections/${connectionId}`,
   );
 }

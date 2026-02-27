@@ -9,7 +9,9 @@ export class WachtError extends Error {
   ) {
     super(message);
     this.name = 'WachtError';
-    Error.captureStackTrace(this, this.constructor);
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, this.constructor);
+    }
   }
 }
 

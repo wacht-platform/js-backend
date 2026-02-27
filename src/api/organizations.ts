@@ -1,4 +1,9 @@
-import { getClient, type PaginatedResponse, type ListOptions } from '../client';
+import {
+  getClient,
+  type WachtClient,
+  type PaginatedResponse,
+  type ListOptions,
+} from "../client";
 import type {
   Organization,
   CreateOrganizationRequest,
@@ -11,37 +16,44 @@ import type {
   UpdateOrganizationRoleRequest,
   Workspace,
   CreateWorkspaceRequest,
-} from '../models';
+} from "../models";
 
 /**
  * List organizations
  */
 export async function listOrganizations(
-  options?: ListOptions
+  options?: ListOptions,
+  client?: WachtClient,
 ): Promise<PaginatedResponse<Organization>> {
-  const client = getClient();
+  const sdkClient = client ?? getClient();
   const params = options
     ? `?limit=${options.limit || 50}&offset=${options.offset || 0}`
-    : '';
-  return client.get<PaginatedResponse<Organization>>(`/organizations${params}`);
+    : "";
+  return sdkClient.get<PaginatedResponse<Organization>>(
+    `/organizations${params}`,
+  );
 }
 
 /**
  * Get an organization by ID
  */
-export async function getOrganization(organizationId: string): Promise<Organization> {
-  const client = getClient();
-  return client.get<Organization>(`/organizations/${organizationId}`);
+export async function getOrganization(
+  organizationId: string,
+  client?: WachtClient,
+): Promise<Organization> {
+  const sdkClient = client ?? getClient();
+  return sdkClient.get<Organization>(`/organizations/${organizationId}`);
 }
 
 /**
  * Create an organization
  */
 export async function createOrganization(
-  request: CreateOrganizationRequest
+  request: CreateOrganizationRequest,
+  client?: WachtClient,
 ): Promise<Organization> {
-  const client = getClient();
-  return client.post<Organization>('/organizations', request);
+  const sdkClient = client ?? getClient();
+  return sdkClient.post<Organization>("/organizations", request);
 }
 
 /**
@@ -49,18 +61,25 @@ export async function createOrganization(
  */
 export async function updateOrganization(
   organizationId: string,
-  request: UpdateOrganizationRequest
+  request: UpdateOrganizationRequest,
+  client?: WachtClient,
 ): Promise<Organization> {
-  const client = getClient();
-  return client.patch<Organization>(`/organizations/${organizationId}`, request);
+  const sdkClient = client ?? getClient();
+  return sdkClient.patch<Organization>(
+    `/organizations/${organizationId}`,
+    request,
+  );
 }
 
 /**
  * Delete an organization
  */
-export async function deleteOrganization(organizationId: string): Promise<void> {
-  const client = getClient();
-  return client.delete<void>(`/organizations/${organizationId}`);
+export async function deleteOrganization(
+  organizationId: string,
+  client?: WachtClient,
+): Promise<void> {
+  const sdkClient = client ?? getClient();
+  return sdkClient.delete<void>(`/organizations/${organizationId}`);
 }
 
 /**
@@ -68,14 +87,15 @@ export async function deleteOrganization(organizationId: string): Promise<void> 
  */
 export async function listOrganizationMembers(
   organizationId: string,
-  options?: ListOptions
+  options?: ListOptions,
+  client?: WachtClient,
 ): Promise<PaginatedResponse<OrganizationMember>> {
-  const client = getClient();
+  const sdkClient = client ?? getClient();
   const params = options
     ? `?limit=${options.limit || 50}&offset=${options.offset || 0}`
-    : '';
-  return client.get<PaginatedResponse<OrganizationMember>>(
-    `/organizations/${organizationId}/members${params}`
+    : "";
+  return sdkClient.get<PaginatedResponse<OrganizationMember>>(
+    `/organizations/${organizationId}/members${params}`,
   );
 }
 
@@ -84,12 +104,13 @@ export async function listOrganizationMembers(
  */
 export async function addOrganizationMember(
   organizationId: string,
-  request: AddOrganizationMemberRequest
+  request: AddOrganizationMemberRequest,
+  client?: WachtClient,
 ): Promise<OrganizationMember> {
-  const client = getClient();
-  return client.post<OrganizationMember>(
+  const sdkClient = client ?? getClient();
+  return sdkClient.post<OrganizationMember>(
     `/organizations/${organizationId}/members`,
-    request
+    request,
   );
 }
 
@@ -99,12 +120,13 @@ export async function addOrganizationMember(
 export async function updateOrganizationMember(
   organizationId: string,
   memberId: string,
-  request: UpdateOrganizationMemberRequest
+  request: UpdateOrganizationMemberRequest,
+  client?: WachtClient,
 ): Promise<OrganizationMember> {
-  const client = getClient();
-  return client.patch<OrganizationMember>(
+  const sdkClient = client ?? getClient();
+  return sdkClient.patch<OrganizationMember>(
     `/organizations/${organizationId}/members/${memberId}`,
-    request
+    request,
   );
 }
 
@@ -113,11 +135,12 @@ export async function updateOrganizationMember(
  */
 export async function removeOrganizationMember(
   organizationId: string,
-  memberId: string
+  memberId: string,
+  client?: WachtClient,
 ): Promise<void> {
-  const client = getClient();
-  return client.delete<void>(
-    `/organizations/${organizationId}/members/${memberId}`
+  const sdkClient = client ?? getClient();
+  return sdkClient.delete<void>(
+    `/organizations/${organizationId}/members/${memberId}`,
   );
 }
 
@@ -126,14 +149,15 @@ export async function removeOrganizationMember(
  */
 export async function listOrganizationRoles(
   organizationId: string,
-  options?: ListOptions
+  options?: ListOptions,
+  client?: WachtClient,
 ): Promise<PaginatedResponse<OrganizationRole>> {
-  const client = getClient();
+  const sdkClient = client ?? getClient();
   const params = options
     ? `?limit=${options.limit || 50}&offset=${options.offset || 0}`
-    : '';
-  return client.get<PaginatedResponse<OrganizationRole>>(
-    `/organizations/${organizationId}/roles${params}`
+    : "";
+  return sdkClient.get<PaginatedResponse<OrganizationRole>>(
+    `/organizations/${organizationId}/roles${params}`,
   );
 }
 
@@ -142,12 +166,13 @@ export async function listOrganizationRoles(
  */
 export async function createOrganizationRole(
   organizationId: string,
-  request: CreateOrganizationRoleRequest
+  request: CreateOrganizationRoleRequest,
+  client?: WachtClient,
 ): Promise<OrganizationRole> {
-  const client = getClient();
-  return client.post<OrganizationRole>(
+  const sdkClient = client ?? getClient();
+  return sdkClient.post<OrganizationRole>(
     `/organizations/${organizationId}/roles`,
-    request
+    request,
   );
 }
 
@@ -157,12 +182,13 @@ export async function createOrganizationRole(
 export async function updateOrganizationRole(
   organizationId: string,
   roleId: string,
-  request: UpdateOrganizationRoleRequest
+  request: UpdateOrganizationRoleRequest,
+  client?: WachtClient,
 ): Promise<OrganizationRole> {
-  const client = getClient();
-  return client.patch<OrganizationRole>(
+  const sdkClient = client ?? getClient();
+  return sdkClient.patch<OrganizationRole>(
     `/organizations/${organizationId}/roles/${roleId}`,
-    request
+    request,
   );
 }
 
@@ -171,11 +197,12 @@ export async function updateOrganizationRole(
  */
 export async function deleteOrganizationRole(
   organizationId: string,
-  roleId: string
+  roleId: string,
+  client?: WachtClient,
 ): Promise<void> {
-  const client = getClient();
-  return client.delete<void>(
-    `/organizations/${organizationId}/roles/${roleId}`
+  const sdkClient = client ?? getClient();
+  return sdkClient.delete<void>(
+    `/organizations/${organizationId}/roles/${roleId}`,
   );
 }
 
@@ -184,11 +211,12 @@ export async function deleteOrganizationRole(
  */
 export async function createWorkspaceForOrganization(
   organizationId: string,
-  request: CreateWorkspaceRequest
+  request: CreateWorkspaceRequest,
+  client?: WachtClient,
 ): Promise<Workspace> {
-  const client = getClient();
-  return client.post<Workspace>(
+  const sdkClient = client ?? getClient();
+  return sdkClient.post<Workspace>(
     `/organizations/${organizationId}/workspaces`,
-    request
+    request,
   );
 }

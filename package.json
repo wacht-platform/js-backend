@@ -1,6 +1,6 @@
 {
-  "name": "@wacht/sdk",
-  "version": "0.0.1-alpha-5",
+  "name": "@wacht/backend",
+  "version": "1.0.0-beta.0",
   "description": "Wacht Backend SDK for JavaScript/TypeScript",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -25,16 +25,13 @@
     "api"
   ],
   "author": "Wacht",
-  "license": "MIT",
+  "license": "Apache-2.0",
   "dependencies": {
-    "axios": "^1.7.0"
+    "jose": "^4.15.9"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
-    "@typescript-eslint/eslint-plugin": "^7.0.0",
-    "@typescript-eslint/parser": "^7.0.0",
     "@vitest/coverage-v8": "^1.0.0",
-    "eslint": "^8.57.0",
     "prettier": "^3.2.0",
     "typescript": "^5.3.0",
     "vitest": "^1.0.0"

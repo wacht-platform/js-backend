@@ -1,10 +1,25 @@
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 import { parseApiError, WachtError } from './error';
+import * as usersApi from './api/users';
+import * as organizationsApi from './api/organizations';
+import * as workspacesApi from './api/workspaces';
+import * as apiKeysApi from './api/api-keys';
+import * as settingsApi from './api/settings';
+import * as notificationsApi from './api/notifications';
+import * as webhooksApi from './api/webhooks';
+import * as aiApi from './api/ai';
+import * as segmentsApi from './api/segments';
+import * as invitationsApi from './api/invitations';
+import * as analyticsApi from './api/analytics';
+import * as utilityApi from './api/utility';
+import * as healthApi from './api/health';
+import * as gatewayApi from './api/gateway';
 
 /**
  * Configuration options for the Wacht SDK client
  */
 export interface WachtConfig {
+  /** Optional logical name for this client */
+  name?: string;
   /** Base URL of the Wacht API (default: https://api.wacht.io) */
   baseUrl?: string;
   /** API key for authentication */
@@ -13,6 +28,19 @@ export interface WachtConfig {
   timeout?: number;
   /** Additional headers to include in all requests */
   headers?: Record<string, string>;
+  /** Optional fetch implementation (useful for Node 16 or custom runtimes) */
+  fetch?: typeof fetch;
+  /** Optional named store to register this client in */
+  store?: WachtClientStore;
+}
+
+export interface RequestConfig extends Omit<RequestInit, 'body'> {
+  /** Query params appended to URL */
+  params?: Record<string, string | number | boolean | null | undefined>;
+  /** Request timeout in milliseconds */
+  timeout?: number;
+  /** Request body */
+  body?: BodyInit | Record<string, unknown> | unknown;
 }
 
 /**
@@ -39,98 +67,244 @@ export interface ListOptions {
   offset?: number;
 }
 
+type AnyFn = (...args: any[]) => any;
+type StripTrailingClientArg<F> = F extends (...args: infer A) => infer R
+  ? A extends [...infer Rest, infer Last]
+    ? Last extends WachtClient | undefined
+      ? (...args: Rest) => R
+      : (...args: A) => R
+    : (...args: A) => R
+  : never;
+type BoundApi<T extends Record<string, AnyFn>> = {
+  [K in keyof T]: StripTrailingClientArg<T[K]>;
+};
+
 /**
  * Wacht SDK Client
  */
 export class WachtClient {
-  private readonly axiosInstance: AxiosInstance;
   private readonly baseUrl: string;
+  private readonly defaultTimeout: number;
+  private readonly defaultHeaders: Record<string, string>;
+  private readonly fetchImpl?: typeof fetch;
+  public readonly name?: string;
+
+  readonly users: BoundApi<typeof usersApi>;
+  readonly organizations: BoundApi<typeof organizationsApi>;
+  readonly workspaces: BoundApi<typeof workspacesApi>;
+  readonly apiKeys: BoundApi<typeof apiKeysApi>;
+  readonly settings: BoundApi<typeof settingsApi>;
+  readonly notifications: BoundApi<typeof notificationsApi>;
+  readonly webhooks: BoundApi<typeof webhooksApi>;
+  readonly ai: BoundApi<typeof aiApi>;
+  readonly segments: BoundApi<typeof segmentsApi>;
+  readonly invitations: BoundApi<typeof invitationsApi>;
+  readonly analytics: BoundApi<typeof analyticsApi>;
+  readonly utility: BoundApi<typeof utilityApi>;
+  readonly health: BoundApi<typeof healthApi>;
+  readonly gateway: BoundApi<typeof gatewayApi>;
 
   constructor(config: WachtConfig) {
     this.baseUrl = config.baseUrl || 'https://api.wacht.io';
+    this.defaultTimeout = config.timeout || 30000;
+    this.defaultHeaders = {
+      'Authorization': `Bearer ${config.apiKey}`,
+      ...config.headers,
+    };
+    this.fetchImpl = config.fetch;
+    this.name = config.name;
 
-    this.axiosInstance = axios.create({
-      baseURL: this.baseUrl,
-      timeout: config.timeout || 30000,
-      headers: {
-        'Authorization': `Bearer ${config.apiKey}`,
-        'Content-Type': 'application/json',
-        ...config.headers,
-      },
-    });
+    this.users = this.bindApi(usersApi);
+    this.organizations = this.bindApi(organizationsApi);
+    this.workspaces = this.bindApi(workspacesApi);
+    this.apiKeys = this.bindApi(apiKeysApi);
+    this.settings = this.bindApi(settingsApi);
+    this.notifications = this.bindApi(notificationsApi);
+    this.webhooks = this.bindApi(webhooksApi);
+    this.ai = this.bindApi(aiApi);
+    this.segments = this.bindApi(segmentsApi);
+    this.invitations = this.bindApi(invitationsApi);
+    this.analytics = this.bindApi(analyticsApi);
+    this.utility = this.bindApi(utilityApi);
+    this.health = this.bindApi(healthApi);
+    this.gateway = this.bindApi(gatewayApi);
 
-    // Response interceptor for error handling
-    this.axiosInstance.interceptors.response.use(
-      (response) => response,
-      (error) => {
-        if (error.response) {
-          const { status, data } = error.response;
-          throw parseApiError(status, data);
+    if (config.store && config.name) {
+      config.store.register(config.name, this);
+    }
+  }
+
+  private bindApi<T extends Record<string, AnyFn>>(api: T): BoundApi<T> {
+    const bound: Partial<Record<keyof T, AnyFn>> = {};
+
+    for (const key of Object.keys(api) as Array<keyof T>) {
+      const fn = api[key];
+      bound[key] = (...args: unknown[]) => fn(...args, this);
+    }
+
+    return bound as BoundApi<T>;
+  }
+
+  private getFetch(): typeof fetch {
+    if (this.fetchImpl) return this.fetchImpl;
+    if (typeof globalThis.fetch === 'function') return globalThis.fetch.bind(globalThis);
+    throw new WachtError(
+      'No fetch implementation found. Provide one via initClient({ fetch }) in this runtime.'
+    );
+  }
+
+  private buildUrl(url: string, params?: RequestConfig['params']): string {
+    const absolute = new URL(url, this.baseUrl);
+    if (params) {
+      for (const [key, value] of Object.entries(params)) {
+        if (value === undefined || value === null) continue;
+        absolute.searchParams.append(key, String(value));
+      }
+    }
+    return absolute.toString();
+  }
+
+  private normalizeBody(
+    body: RequestConfig['body'],
+    headers: Headers
+  ): BodyInit | undefined {
+    if (body === undefined || body === null) return undefined;
+
+    const hasFormData = typeof FormData !== 'undefined';
+    const hasUrlSearchParams = typeof URLSearchParams !== 'undefined';
+    const hasBlob = typeof Blob !== 'undefined';
+    const hasReadableStream = typeof ReadableStream !== 'undefined';
+
+    if (
+      typeof body === 'string' ||
+      (hasFormData && body instanceof FormData) ||
+      (hasUrlSearchParams && body instanceof URLSearchParams) ||
+      (hasBlob && body instanceof Blob) ||
+      body instanceof ArrayBuffer ||
+      ArrayBuffer.isView(body) ||
+      (hasReadableStream && body instanceof ReadableStream)
+    ) {
+      return body as BodyInit;
+    }
+
+    if (!headers.has('Content-Type')) {
+      headers.set('Content-Type', 'application/json');
+    }
+    return JSON.stringify(body);
+  }
+
+  private async parseResponse<T>(response: Response): Promise<T> {
+    const contentType = response.headers.get('content-type')?.toLowerCase() || '';
+    if (response.status === 204) {
+      return undefined as T;
+    }
+    if (contentType.includes('application/json')) {
+      return (await response.json()) as T;
+    }
+    return (await response.text()) as T;
+  }
+
+  private async request<T>(
+    method: string,
+    url: string,
+    config?: RequestConfig
+  ): Promise<T> {
+    const fetchImpl = this.getFetch();
+    const timeout = config?.timeout ?? this.defaultTimeout;
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeout);
+
+    try {
+      const headers = new Headers(this.defaultHeaders);
+      if (config?.headers) {
+        new Headers(config.headers).forEach((value, key) => headers.set(key, value));
+      }
+
+      const response = await fetchImpl(this.buildUrl(url, config?.params), {
+        ...config,
+        method,
+        headers,
+        body: this.normalizeBody(config?.body, headers),
+        signal: config?.signal ?? controller.signal,
+      });
+
+      if (!response.ok) {
+        let errorData: unknown = null;
+        try {
+          errorData = await response.json();
+        } catch {
+          try {
+            const text = await response.text();
+            errorData = { message: text };
+          } catch {
+            errorData = null;
+          }
         }
-        if (error.request) {
-          throw new WachtError('No response received from server');
-        }
+        throw parseApiError(response.status, errorData);
+      }
+
+      return this.parseResponse<T>(response);
+    } catch (error) {
+      if (error instanceof WachtError) {
+        throw error;
+      }
+
+      if (error instanceof Error && error.name === 'AbortError') {
+        throw new WachtError('Request timed out');
+      }
+
+      if (error instanceof Error) {
         throw new WachtError(error.message);
       }
-    );
+
+      throw new WachtError('Request failed');
+    } finally {
+      clearTimeout(timeoutId);
+    }
   }
 
   /**
    * Make a GET request
    */
-  async get<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
-    const response = await this.axiosInstance.get<T, AxiosResponse<T>>(
-      url,
-      config
-    );
-    return response.data;
+  async get<T>(url: string, config?: RequestConfig): Promise<T> {
+    return this.request<T>('GET', url, config);
   }
 
   /**
    * Make a POST request
    */
-  async post<T>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> {
-    const response = await this.axiosInstance.post<T, AxiosResponse<T>>(
-      url,
-      data,
-      config
-    );
-    return response.data;
+  async post<T>(url: string, data?: unknown, config?: RequestConfig): Promise<T> {
+    return this.request<T>('POST', url, {
+      ...config,
+      body: data as RequestConfig['body'],
+    });
   }
 
   /**
    * Make a PUT request
    */
-  async put<T>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> {
-    const response = await this.axiosInstance.put<T, AxiosResponse<T>>(
-      url,
-      data,
-      config
-    );
-    return response.data;
+  async put<T>(url: string, data?: unknown, config?: RequestConfig): Promise<T> {
+    return this.request<T>('PUT', url, {
+      ...config,
+      body: data as RequestConfig['body'],
+    });
   }
 
   /**
    * Make a PATCH request
    */
-  async patch<T>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> {
-    const response = await this.axiosInstance.patch<T, AxiosResponse<T>>(
-      url,
-      data,
-      config
-    );
-    return response.data;
+  async patch<T>(url: string, data?: unknown, config?: RequestConfig): Promise<T> {
+    return this.request<T>('PATCH', url, {
+      ...config,
+      body: data as RequestConfig['body'],
+    });
   }
 
   /**
    * Make a DELETE request
    */
-  async delete<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
-    const response = await this.axiosInstance.delete<T, AxiosResponse<T>>(
-      url,
-      config
-    );
-    return response.data;
+  async delete<T>(url: string, config?: RequestConfig): Promise<T> {
+    return this.request<T>('DELETE', url, config);
   }
 
   /**
@@ -145,6 +319,42 @@ export class WachtClient {
  * Global client instance (lazy initialized)
  */
 let globalClient: WachtClient | null = null;
+
+export class WachtClientStore {
+  private readonly clients = new Map<string, WachtClient>();
+
+  register(name: string, client: WachtClient): void {
+    this.clients.set(name, client);
+  }
+
+  get(name: string): WachtClient {
+    const client = this.clients.get(name);
+    if (!client) {
+      throw new Error(`No Wacht client registered with name '${name}'.`);
+    }
+    return client;
+  }
+
+  has(name: string): boolean {
+    return this.clients.has(name);
+  }
+
+  remove(name: string): boolean {
+    return this.clients.delete(name);
+  }
+
+  list(): string[] {
+    return Array.from(this.clients.keys());
+  }
+
+  clear(): void {
+    this.clients.clear();
+  }
+}
+
+export function createClientStore(): WachtClientStore {
+  return new WachtClientStore();
+}
 
 /**
  * Initialize the global client

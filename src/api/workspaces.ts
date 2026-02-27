@@ -1,4 +1,9 @@
-import { getClient, type PaginatedResponse, type ListOptions } from '../client';
+import {
+  getClient,
+  type WachtClient,
+  type PaginatedResponse,
+  type ListOptions,
+} from "../client";
 import type {
   Workspace,
   CreateWorkspaceRequest,
@@ -9,43 +14,48 @@ import type {
   WorkspaceRole,
   CreateWorkspaceRoleRequest,
   UpdateWorkspaceRoleRequest,
-} from '../models';
+} from "../models";
 
 /**
  * List workspaces
  */
 export async function listWorkspaces(
-  options?: ListOptions & { organization_id?: string }
+  options?: ListOptions & { organization_id?: string },
+  client?: WachtClient,
 ): Promise<PaginatedResponse<Workspace>> {
-  const client = getClient();
+  const sdkClient = client ?? getClient();
   const params = new URLSearchParams();
-  if (options?.limit) params.append('limit', String(options.limit));
+  if (options?.limit) params.append("limit", String(options.limit));
   if (options?.offset !== undefined)
-    params.append('offset', String(options.offset));
+    params.append("offset", String(options.offset));
   if (options?.organization_id)
-    params.append('organization_id', options.organization_id);
+    params.append("organization_id", options.organization_id);
   const queryString = params.toString();
-  return client.get<PaginatedResponse<Workspace>>(
-    `/workspaces${queryString ? `?${queryString}` : ''}`
+  return sdkClient.get<PaginatedResponse<Workspace>>(
+    `/workspaces${queryString ? `?${queryString}` : ""}`,
   );
 }
 
 /**
  * Get a workspace by ID
  */
-export async function getWorkspace(workspaceId: string): Promise<Workspace> {
-  const client = getClient();
-  return client.get<Workspace>(`/workspaces/${workspaceId}`);
+export async function getWorkspace(
+  workspaceId: string,
+  client?: WachtClient,
+): Promise<Workspace> {
+  const sdkClient = client ?? getClient();
+  return sdkClient.get<Workspace>(`/workspaces/${workspaceId}`);
 }
 
 /**
  * Create a workspace
  */
 export async function createWorkspace(
-  request: CreateWorkspaceRequest
+  request: CreateWorkspaceRequest,
+  client?: WachtClient,
 ): Promise<Workspace> {
-  const client = getClient();
-  return client.post<Workspace>('/workspaces', request);
+  const sdkClient = client ?? getClient();
+  return sdkClient.post<Workspace>("/workspaces", request);
 }
 
 /**
@@ -53,18 +63,22 @@ export async function createWorkspace(
  */
 export async function updateWorkspace(
   workspaceId: string,
-  request: UpdateWorkspaceRequest
+  request: UpdateWorkspaceRequest,
+  client?: WachtClient,
 ): Promise<Workspace> {
-  const client = getClient();
-  return client.patch<Workspace>(`/workspaces/${workspaceId}`, request);
+  const sdkClient = client ?? getClient();
+  return sdkClient.patch<Workspace>(`/workspaces/${workspaceId}`, request);
 }
 
 /**
  * Delete a workspace
  */
-export async function deleteWorkspace(workspaceId: string): Promise<void> {
-  const client = getClient();
-  return client.delete<void>(`/workspaces/${workspaceId}`);
+export async function deleteWorkspace(
+  workspaceId: string,
+  client?: WachtClient,
+): Promise<void> {
+  const sdkClient = client ?? getClient();
+  return sdkClient.delete<void>(`/workspaces/${workspaceId}`);
 }
 
 /**
@@ -72,14 +86,15 @@ export async function deleteWorkspace(workspaceId: string): Promise<void> {
  */
 export async function listWorkspaceMembers(
   workspaceId: string,
-  options?: ListOptions
+  options?: ListOptions,
+  client?: WachtClient,
 ): Promise<PaginatedResponse<WorkspaceMember>> {
-  const client = getClient();
+  const sdkClient = client ?? getClient();
   const params = options
     ? `?limit=${options.limit || 50}&offset=${options.offset || 0}`
-    : '';
-  return client.get<PaginatedResponse<WorkspaceMember>>(
-    `/workspaces/${workspaceId}/members${params}`
+    : "";
+  return sdkClient.get<PaginatedResponse<WorkspaceMember>>(
+    `/workspaces/${workspaceId}/members${params}`,
   );
 }
 
@@ -88,12 +103,13 @@ export async function listWorkspaceMembers(
  */
 export async function addWorkspaceMember(
   workspaceId: string,
-  request: AddWorkspaceMemberRequest
+  request: AddWorkspaceMemberRequest,
+  client?: WachtClient,
 ): Promise<WorkspaceMember> {
-  const client = getClient();
-  return client.post<WorkspaceMember>(
+  const sdkClient = client ?? getClient();
+  return sdkClient.post<WorkspaceMember>(
     `/workspaces/${workspaceId}/members`,
-    request
+    request,
   );
 }
 
@@ -103,12 +119,13 @@ export async function addWorkspaceMember(
 export async function updateWorkspaceMember(
   workspaceId: string,
   memberId: string,
-  request: UpdateWorkspaceMemberRequest
+  request: UpdateWorkspaceMemberRequest,
+  client?: WachtClient,
 ): Promise<WorkspaceMember> {
-  const client = getClient();
-  return client.patch<WorkspaceMember>(
+  const sdkClient = client ?? getClient();
+  return sdkClient.patch<WorkspaceMember>(
     `/workspaces/${workspaceId}/members/${memberId}`,
-    request
+    request,
   );
 }
 
@@ -117,11 +134,12 @@ export async function updateWorkspaceMember(
  */
 export async function removeWorkspaceMember(
   workspaceId: string,
-  memberId: string
+  memberId: string,
+  client?: WachtClient,
 ): Promise<void> {
-  const client = getClient();
-  return client.delete<void>(
-    `/workspaces/${workspaceId}/members/${memberId}`
+  const sdkClient = client ?? getClient();
+  return sdkClient.delete<void>(
+    `/workspaces/${workspaceId}/members/${memberId}`,
   );
 }
 
@@ -130,14 +148,15 @@ export async function removeWorkspaceMember(
  */
 export async function listWorkspaceRoles(
   workspaceId: string,
-  options?: ListOptions
+  options?: ListOptions,
+  client?: WachtClient,
 ): Promise<PaginatedResponse<WorkspaceRole>> {
-  const client = getClient();
+  const sdkClient = client ?? getClient();
   const params = options
     ? `?limit=${options.limit || 50}&offset=${options.offset || 0}`
-    : '';
-  return client.get<PaginatedResponse<WorkspaceRole>>(
-    `/workspaces/${workspaceId}/roles${params}`
+    : "";
+  return sdkClient.get<PaginatedResponse<WorkspaceRole>>(
+    `/workspaces/${workspaceId}/roles${params}`,
   );
 }
 
@@ -146,12 +165,13 @@ export async function listWorkspaceRoles(
  */
 export async function createWorkspaceRole(
   workspaceId: string,
-  request: CreateWorkspaceRoleRequest
+  request: CreateWorkspaceRoleRequest,
+  client?: WachtClient,
 ): Promise<WorkspaceRole> {
-  const client = getClient();
-  return client.post<WorkspaceRole>(
+  const sdkClient = client ?? getClient();
+  return sdkClient.post<WorkspaceRole>(
     `/workspaces/${workspaceId}/roles`,
-    request
+    request,
   );
 }
 
@@ -161,12 +181,13 @@ export async function createWorkspaceRole(
 export async function updateWorkspaceRole(
   workspaceId: string,
   roleId: string,
-  request: UpdateWorkspaceRoleRequest
+  request: UpdateWorkspaceRoleRequest,
+  client?: WachtClient,
 ): Promise<WorkspaceRole> {
-  const client = getClient();
-  return client.patch<WorkspaceRole>(
+  const sdkClient = client ?? getClient();
+  return sdkClient.patch<WorkspaceRole>(
     `/workspaces/${workspaceId}/roles/${roleId}`,
-    request
+    request,
   );
 }
 
@@ -175,8 +196,9 @@ export async function updateWorkspaceRole(
  */
 export async function deleteWorkspaceRole(
   workspaceId: string,
-  roleId: string
+  roleId: string,
+  client?: WachtClient,
 ): Promise<void> {
-  const client = getClient();
-  return client.delete<void>(`/workspaces/${workspaceId}/roles/${roleId}`);
+  const sdkClient = client ?? getClient();
+  return sdkClient.delete<void>(`/workspaces/${workspaceId}/roles/${roleId}`);
 }

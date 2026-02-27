@@ -1,4 +1,9 @@
-import { getClient, type PaginatedResponse, type ListOptions } from '../client';
+import {
+  getClient,
+  type WachtClient,
+  type PaginatedResponse,
+  type ListOptions,
+} from "../client";
 import type {
   WebhookApp,
   CreateWebhookAppRequest,
@@ -13,43 +18,48 @@ import type {
   WebhookTimeseriesData,
   CreateWebhookEndpointRequest,
   UpdateWebhookEndpointRequest,
-} from '../models';
+} from "../models";
 
 /**
  * List webhook apps
  */
 export async function listWebhookApps(
-  options?: ListOptions & { include_inactive?: boolean }
+  options?: ListOptions & { include_inactive?: boolean },
+  client?: WachtClient,
 ): Promise<PaginatedResponse<WebhookApp>> {
-  const client = getClient();
+  const sdkClient = client ?? getClient();
   const params = new URLSearchParams();
-  if (options?.limit) params.append('limit', String(options.limit));
+  if (options?.limit) params.append("limit", String(options.limit));
   if (options?.offset !== undefined)
-    params.append('offset', String(options.offset));
+    params.append("offset", String(options.offset));
   if (options?.include_inactive !== undefined)
-    params.append('include_inactive', String(options.include_inactive));
+    params.append("include_inactive", String(options.include_inactive));
   const queryString = params.toString();
-  return client.get<PaginatedResponse<WebhookApp>>(
-    `/webhooks/apps${queryString ? `?${queryString}` : ''}`
+  return sdkClient.get<PaginatedResponse<WebhookApp>>(
+    `/webhooks/apps${queryString ? `?${queryString}` : ""}`,
   );
 }
 
 /**
  * Get a webhook app
  */
-export async function getWebhookApp(appId: string): Promise<WebhookApp> {
-  const client = getClient();
-  return client.get<WebhookApp>(`/webhooks/apps/${appId}`);
+export async function getWebhookApp(
+  appId: string,
+  client?: WachtClient,
+): Promise<WebhookApp> {
+  const sdkClient = client ?? getClient();
+  return sdkClient.get<WebhookApp>(`/webhooks/apps/${appId}`);
 }
 
 /**
  * Create a webhook app
  */
 export async function createWebhookApp(
-  request: CreateWebhookAppRequest
+  request: CreateWebhookAppRequest,
+  client?: WachtClient,
 ): Promise<WebhookApp> {
-  const client = getClient();
-  return client.post<WebhookApp>('/webhooks/apps', request);
+  const sdkClient = client ?? getClient();
+  return sdkClient.post<WebhookApp>("/webhooks/apps", request);
 }
 
 /**
@@ -57,18 +67,22 @@ export async function createWebhookApp(
  */
 export async function updateWebhookApp(
   appId: string,
-  request: UpdateWebhookAppRequest
+  request: UpdateWebhookAppRequest,
+  client?: WachtClient,
 ): Promise<WebhookApp> {
-  const client = getClient();
-  return client.patch<WebhookApp>(`/webhooks/apps/${appId}`, request);
+  const sdkClient = client ?? getClient();
+  return sdkClient.patch<WebhookApp>(`/webhooks/apps/${appId}`, request);
 }
 
 /**
  * Delete a webhook app
  */
-export async function deleteWebhookApp(appId: string): Promise<void> {
-  const client = getClient();
-  return client.delete<void>(`/webhooks/apps/${appId}`);
+export async function deleteWebhookApp(
+  appId: string,
+  client?: WachtClient,
+): Promise<void> {
+  const sdkClient = client ?? getClient();
+  return sdkClient.delete<void>(`/webhooks/apps/${appId}`);
 }
 
 /**
@@ -76,21 +90,25 @@ export async function deleteWebhookApp(appId: string): Promise<void> {
  */
 export async function triggerWebhook(
   appName: string,
-  request: TriggerWebhookRequest
+  request: TriggerWebhookRequest,
+  client?: WachtClient,
 ): Promise<{ status: string }> {
-  const client = getClient();
-  return client.post<{ status: string }>(
+  const sdkClient = client ?? getClient();
+  return sdkClient.post<{ status: string }>(
     `/webhooks/apps/${appName}/trigger`,
-    request
+    request,
   );
 }
 
 /**
  * Get webhook analytics
  */
-export async function getWebhookAnalytics(appId: string): Promise<WebhookAnalytics> {
-  const client = getClient();
-  return client.get<WebhookAnalytics>(`/webhooks/apps/${appId}/analytics`);
+export async function getWebhookAnalytics(
+  appId: string,
+  client?: WachtClient,
+): Promise<WebhookAnalytics> {
+  const sdkClient = client ?? getClient();
+  return sdkClient.get<WebhookAnalytics>(`/webhooks/apps/${appId}/analytics`);
 }
 
 /**
@@ -98,25 +116,29 @@ export async function getWebhookAnalytics(appId: string): Promise<WebhookAnalyti
  */
 export async function listDeliveryAttempts(
   webhookId: string,
-  options?: ListOptions
+  options?: ListOptions,
+  client?: WachtClient,
 ): Promise<PaginatedResponse<WebhookDelivery>> {
-  const client = getClient();
+  const sdkClient = client ?? getClient();
   const params = new URLSearchParams();
-  if (options?.limit) params.append('limit', String(options.limit));
+  if (options?.limit) params.append("limit", String(options.limit));
   if (options?.offset !== undefined)
-    params.append('offset', String(options.offset));
+    params.append("offset", String(options.offset));
   const queryString = params.toString();
-  return client.get<PaginatedResponse<WebhookDelivery>>(
-    `/webhooks/apps/${webhookId}/deliveries${queryString ? `?${queryString}` : ''}`
+  return sdkClient.get<PaginatedResponse<WebhookDelivery>>(
+    `/webhooks/apps/${webhookId}/deliveries${queryString ? `?${queryString}` : ""}`,
   );
 }
 
 /**
  * Get webhook stats
  */
-export async function getWebhookStats(appId: string): Promise<WebhookStats> {
-  const client = getClient();
-  return client.get<WebhookStats>(`/webhooks/apps/${appId}/stats`);
+export async function getWebhookStats(
+  appId: string,
+  client?: WachtClient,
+): Promise<WebhookStats> {
+  const sdkClient = client ?? getClient();
+  return sdkClient.get<WebhookStats>(`/webhooks/apps/${appId}/stats`);
 }
 
 /**
@@ -124,15 +146,16 @@ export async function getWebhookStats(appId: string): Promise<WebhookStats> {
  */
 export async function getWebhookTimeseries(
   appId: string,
-  options?: { interval?: 'hour' | 'day' | 'week' | 'month'; limit?: number }
+  options?: { interval?: "hour" | "day" | "week" | "month"; limit?: number },
+  client?: WachtClient,
 ): Promise<WebhookTimeseriesData[]> {
-  const client = getClient();
+  const sdkClient = client ?? getClient();
   const params = new URLSearchParams();
-  if (options?.interval) params.append('interval', options.interval);
-  if (options?.limit) params.append('limit', String(options.limit));
+  if (options?.interval) params.append("interval", options.interval);
+  if (options?.limit) params.append("limit", String(options.limit));
   const queryString = params.toString();
-  return client.get<WebhookTimeseriesData[]>(
-    `/webhooks/apps/${appId}/timeseries${queryString ? `?${queryString}` : ''}`
+  return sdkClient.get<WebhookTimeseriesData[]>(
+    `/webhooks/apps/${appId}/timeseries${queryString ? `?${queryString}` : ""}`,
   );
 }
 
@@ -140,20 +163,22 @@ export async function getWebhookTimeseries(
  * List webhook events
  */
 export async function listWebhookEvents(
-  appId: string
+  appId: string,
+  client?: WachtClient,
 ): Promise<WebhookEvent[]> {
-  const client = getClient();
-  return client.get<WebhookEvent[]>(`/webhooks/apps/${appId}/events`);
+  const sdkClient = client ?? getClient();
+  return sdkClient.get<WebhookEvent[]>(`/webhooks/apps/${appId}/events`);
 }
 
 /**
  * List webhook endpoints
  */
 export async function listWebhookEndpoints(
-  appId: string
+  appId: string,
+  client?: WachtClient,
 ): Promise<WebhookEndpoint[]> {
-  const client = getClient();
-  return client.get<WebhookEndpoint[]>(`/webhooks/apps/${appId}/endpoints`);
+  const sdkClient = client ?? getClient();
+  return sdkClient.get<WebhookEndpoint[]>(`/webhooks/apps/${appId}/endpoints`);
 }
 
 /**
@@ -161,12 +186,13 @@ export async function listWebhookEndpoints(
  */
 export async function createWebhookEndpoint(
   appId: string,
-  request: CreateWebhookEndpointRequest
+  request: CreateWebhookEndpointRequest,
+  client?: WachtClient,
 ): Promise<WebhookEndpoint> {
-  const client = getClient();
-  return client.post<WebhookEndpoint>(
+  const sdkClient = client ?? getClient();
+  return sdkClient.post<WebhookEndpoint>(
     `/webhooks/apps/${appId}/endpoints`,
-    request
+    request,
   );
 }
 
@@ -175,12 +201,11 @@ export async function createWebhookEndpoint(
  */
 export async function getWebhookEndpoint(
   appId: string,
-  endpointId: string
+  endpointId: string,
+  client?: WachtClient,
 ): Promise<WebhookEndpoint> {
-  const client = getClient();
-  return client.get<WebhookEndpoint>(
-    `/webhooks/endpoints/${endpointId}`
-  );
+  const sdkClient = client ?? getClient();
+  return sdkClient.get<WebhookEndpoint>(`/webhooks/endpoints/${endpointId}`);
 }
 
 /**
@@ -188,12 +213,13 @@ export async function getWebhookEndpoint(
  */
 export async function updateWebhookEndpoint(
   endpointId: string,
-  request: UpdateWebhookEndpointRequest
+  request: UpdateWebhookEndpointRequest,
+  client?: WachtClient,
 ): Promise<WebhookEndpoint> {
-  const client = getClient();
-  return client.patch<WebhookEndpoint>(
+  const sdkClient = client ?? getClient();
+  return sdkClient.patch<WebhookEndpoint>(
     `/webhooks/endpoints/${endpointId}`,
-    request
+    request,
   );
 }
 
@@ -201,10 +227,11 @@ export async function updateWebhookEndpoint(
  * Delete a webhook endpoint
  */
 export async function deleteWebhookEndpoint(
-  endpointId: string
+  endpointId: string,
+  client?: WachtClient,
 ): Promise<void> {
-  const client = getClient();
-  return client.delete<void>(`/webhooks/endpoints/${endpointId}`);
+  const sdkClient = client ?? getClient();
+  return sdkClient.delete<void>(`/webhooks/endpoints/${endpointId}`);
 }
 
 /**
@@ -212,11 +239,12 @@ export async function deleteWebhookEndpoint(
  */
 export async function testWebhookEndpoint(
   appId: string,
-  endpointId: string
+  endpointId: string,
+  client?: WachtClient,
 ): Promise<{ success: boolean; message?: string }> {
-  const client = getClient();
-  return client.post<{ success: boolean; message?: string }>(
-    `/webhooks/apps/${appId}/endpoints/${endpointId}/test`
+  const sdkClient = client ?? getClient();
+  return sdkClient.post<{ success: boolean; message?: string }>(
+    `/webhooks/apps/${appId}/endpoints/${endpointId}/test`,
   );
 }
 
@@ -224,11 +252,12 @@ export async function testWebhookEndpoint(
  * Reactivate a webhook endpoint
  */
 export async function reactivateWebhookEndpoint(
-  endpointId: string
+  endpointId: string,
+  client?: WachtClient,
 ): Promise<WebhookEndpoint> {
-  const client = getClient();
-  return client.post<WebhookEndpoint>(
-    `/webhooks/endpoints/${endpointId}/reactivate`
+  const sdkClient = client ?? getClient();
+  return sdkClient.post<WebhookEndpoint>(
+    `/webhooks/endpoints/${endpointId}/reactivate`,
   );
 }
 
@@ -237,11 +266,12 @@ export async function reactivateWebhookEndpoint(
  */
 export async function replayWebhookDelivery(
   appId: string,
-  deliveryId: string
+  deliveryId: string,
+  client?: WachtClient,
 ): Promise<{ status: string }> {
-  const client = getClient();
-  return client.post<{ status: string }>(
-    `/webhooks/apps/${appId}/deliveries/${deliveryId}/replay`
+  const sdkClient = client ?? getClient();
+  return sdkClient.post<{ status: string }>(
+    `/webhooks/apps/${appId}/deliveries/${deliveryId}/replay`,
   );
 }
 
@@ -249,21 +279,23 @@ export async function replayWebhookDelivery(
  * Get a webhook delivery
  */
 export async function getWebhookDelivery(
-  deliveryId: string
+  deliveryId: string,
+  client?: WachtClient,
 ): Promise<WebhookDelivery> {
-  const client = getClient();
-  return client.get<WebhookDelivery>(`/webhooks/deliveries/${deliveryId}`);
+  const sdkClient = client ?? getClient();
+  return sdkClient.get<WebhookDelivery>(`/webhooks/deliveries/${deliveryId}`);
 }
 
 /**
  * Rotate webhook app secret
  */
 export async function rotateWebhookSecret(
-  appId: string
+  appId: string,
+  client?: WachtClient,
 ): Promise<{ webhook_secret: string }> {
-  const client = getClient();
-  return client.post<{ webhook_secret: string }>(
-    `/webhooks/apps/${appId}/rotate-secret`
+  const sdkClient = client ?? getClient();
+  return sdkClient.post<{ webhook_secret: string }>(
+    `/webhooks/apps/${appId}/rotate-secret`,
   );
 }
 
@@ -272,11 +304,12 @@ export async function rotateWebhookSecret(
  */
 export async function triggerWebhookBatch(
   appName: string,
-  events: TriggerWebhookRequest[]
+  events: TriggerWebhookRequest[],
+  client?: WachtClient,
 ): Promise<{ status: string }> {
-  const client = getClient();
-  return client.post<{ status: string }>(
+  const sdkClient = client ?? getClient();
+  return sdkClient.post<{ status: string }>(
     `/webhooks/apps/${appName}/trigger-batch`,
-    { events }
+    { events },
   );
 }

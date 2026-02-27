@@ -1,9 +1,11 @@
-import { getClient } from '../client';
+import { getClient, type WachtClient } from "../client";
 
 /**
  * Health check
  */
-export async function healthCheck(): Promise<{ status: string }> {
-  const client = getClient();
-  return client.get<{ status: string }>('/health');
+export async function healthCheck(
+  client?: WachtClient,
+): Promise<{ status: string }> {
+  const sdkClient = client ?? getClient();
+  return sdkClient.get<{ status: string }>("/health");
 }

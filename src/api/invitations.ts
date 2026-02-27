@@ -1,29 +1,39 @@
-import { getClient, type PaginatedResponse, type ListOptions } from '../client';
+import {
+  getClient,
+  type WachtClient,
+  type PaginatedResponse,
+  type ListOptions,
+} from "../client";
 import type {
   DeploymentInvitation,
   DeploymentWaitlistUser,
   InviteUserRequest,
   CreateSessionTicketRequest,
   SessionTicketResponse,
-} from '../models/user';
+} from "../models/user";
 
 /**
  * List invitations
  */
 export async function listInvitations(
-  options?: ListOptions & { sort_key?: string; sort_order?: string; search?: string }
+  options?: ListOptions & {
+    sort_key?: string;
+    sort_order?: string;
+    search?: string;
+  },
+  client?: WachtClient,
 ): Promise<PaginatedResponse<DeploymentInvitation>> {
-  const client = getClient();
+  const sdkClient = client ?? getClient();
   const params = new URLSearchParams();
-  if (options?.limit) params.append('limit', String(options.limit));
+  if (options?.limit) params.append("limit", String(options.limit));
   if (options?.offset !== undefined)
-    params.append('offset', String(options.offset));
-  if (options?.sort_key) params.append('sort_key', options.sort_key);
-  if (options?.sort_order) params.append('sort_order', options.sort_order);
-  if (options?.search) params.append('search', options.search);
+    params.append("offset", String(options.offset));
+  if (options?.sort_key) params.append("sort_key", options.sort_key);
+  if (options?.sort_order) params.append("sort_order", options.sort_order);
+  if (options?.search) params.append("search", options.search);
   const queryString = params.toString();
-  return client.get<PaginatedResponse<DeploymentInvitation>>(
-    `/invitations${queryString ? `?${queryString}` : ''}`
+  return sdkClient.get<PaginatedResponse<DeploymentInvitation>>(
+    `/invitations${queryString ? `?${queryString}` : ""}`,
   );
 }
 
@@ -31,39 +41,46 @@ export async function listInvitations(
  * Invite user
  */
 export async function inviteUser(
-  request: InviteUserRequest
+  request: InviteUserRequest,
+  client?: WachtClient,
 ): Promise<DeploymentInvitation> {
-  const client = getClient();
-  return client.post<DeploymentInvitation>('/invitations', request);
+  const sdkClient = client ?? getClient();
+  return sdkClient.post<DeploymentInvitation>("/invitations", request);
 }
 
 /**
  * Delete invitation
  */
 export async function deleteInvitation(
-  invitationId: string
+  invitationId: string,
+  client?: WachtClient,
 ): Promise<void> {
-  const client = getClient();
-  return client.delete<void>(`/invitations/${invitationId}`);
+  const sdkClient = client ?? getClient();
+  return sdkClient.delete<void>(`/invitations/${invitationId}`);
 }
 
 /**
  * List waitlist users
  */
 export async function listWaitlist(
-  options?: ListOptions & { sort_key?: string; sort_order?: string; search?: string }
+  options?: ListOptions & {
+    sort_key?: string;
+    sort_order?: string;
+    search?: string;
+  },
+  client?: WachtClient,
 ): Promise<PaginatedResponse<DeploymentWaitlistUser>> {
-  const client = getClient();
+  const sdkClient = client ?? getClient();
   const params = new URLSearchParams();
-  if (options?.limit) params.append('limit', String(options.limit));
+  if (options?.limit) params.append("limit", String(options.limit));
   if (options?.offset !== undefined)
-    params.append('offset', String(options.offset));
-  if (options?.sort_key) params.append('sort_key', options.sort_key);
-  if (options?.sort_order) params.append('sort_order', options.sort_order);
-  if (options?.search) params.append('search', options.search);
+    params.append("offset", String(options.offset));
+  if (options?.sort_key) params.append("sort_key", options.sort_key);
+  if (options?.sort_order) params.append("sort_order", options.sort_order);
+  if (options?.search) params.append("search", options.search);
   const queryString = params.toString();
-  return client.get<PaginatedResponse<DeploymentWaitlistUser>>(
-    `/waitlist${queryString ? `?${queryString}` : ''}`
+  return sdkClient.get<PaginatedResponse<DeploymentWaitlistUser>>(
+    `/waitlist${queryString ? `?${queryString}` : ""}`,
   );
 }
 
@@ -71,11 +88,12 @@ export async function listWaitlist(
  * Approve waitlist user
  */
 export async function approveWaitlistUser(
-  waitlistUserId: string
+  waitlistUserId: string,
+  client?: WachtClient,
 ): Promise<DeploymentInvitation> {
-  const client = getClient();
-  return client.post<DeploymentInvitation>(
-    `/waitlist/${waitlistUserId}/approve`
+  const sdkClient = client ?? getClient();
+  return sdkClient.post<DeploymentInvitation>(
+    `/waitlist/${waitlistUserId}/approve`,
   );
 }
 
@@ -83,8 +101,9 @@ export async function approveWaitlistUser(
  * Create session ticket
  */
 export async function createSessionTicket(
-  request: CreateSessionTicketRequest
+  request: CreateSessionTicketRequest,
+  client?: WachtClient,
 ): Promise<SessionTicketResponse> {
-  const client = getClient();
-  return client.post<SessionTicketResponse>('/session/tickets', request);
+  const sdkClient = client ?? getClient();
+  return sdkClient.post<SessionTicketResponse>("/session/tickets", request);
 }

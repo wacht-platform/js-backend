@@ -1,4 +1,9 @@
-import { getClient, type PaginatedResponse, type ListOptions } from '../client';
+import {
+  getClient,
+  type WachtClient,
+  type PaginatedResponse,
+  type ListOptions,
+} from "../client";
 import type {
   AiAgent,
   CreateAiAgentRequest,
@@ -18,37 +23,42 @@ import type {
   AiKnowledgeBaseDocument,
   ExecuteAgentRequest,
   ExecuteAgentResponse,
-} from '../models';
+} from "../models";
 
 /**
  * List AI agents
  */
 export async function listAgents(
-  options?: ListOptions
+  options?: ListOptions,
+  client?: WachtClient,
 ): Promise<PaginatedResponse<AiAgent>> {
-  const client = getClient();
+  const sdkClient = client ?? getClient();
   const params = options
     ? `?limit=${options.limit || 50}&offset=${options.offset || 0}`
-    : '';
-  return client.get<PaginatedResponse<AiAgent>>(`/ai/agents${params}`);
+    : "";
+  return sdkClient.get<PaginatedResponse<AiAgent>>(`/ai/agents${params}`);
 }
 
 /**
  * Get an AI agent
  */
-export async function getAgent(agentId: string): Promise<AiAgent> {
-  const client = getClient();
-  return client.get<AiAgent>(`/ai/agents/${agentId}`);
+export async function getAgent(
+  agentId: string,
+  client?: WachtClient,
+): Promise<AiAgent> {
+  const sdkClient = client ?? getClient();
+  return sdkClient.get<AiAgent>(`/ai/agents/${agentId}`);
 }
 
 /**
  * Create an AI agent
  */
 export async function createAgent(
-  request: CreateAiAgentRequest
+  request: CreateAiAgentRequest,
+  client?: WachtClient,
 ): Promise<AiAgent> {
-  const client = getClient();
-  return client.post<AiAgent>('/ai/agents', request);
+  const sdkClient = client ?? getClient();
+  return sdkClient.post<AiAgent>("/ai/agents", request);
 }
 
 /**
@@ -56,18 +66,22 @@ export async function createAgent(
  */
 export async function updateAgent(
   agentId: string,
-  request: UpdateAiAgentRequest
+  request: UpdateAiAgentRequest,
+  client?: WachtClient,
 ): Promise<AiAgent> {
-  const client = getClient();
-  return client.patch<AiAgent>(`/ai/agents/${agentId}`, request);
+  const sdkClient = client ?? getClient();
+  return sdkClient.patch<AiAgent>(`/ai/agents/${agentId}`, request);
 }
 
 /**
  * Delete an AI agent
  */
-export async function deleteAgent(agentId: string): Promise<void> {
-  const client = getClient();
-  return client.delete<void>(`/ai/agents/${agentId}`);
+export async function deleteAgent(
+  agentId: string,
+  client?: WachtClient,
+): Promise<void> {
+  const sdkClient = client ?? getClient();
+  return sdkClient.delete<void>(`/ai/agents/${agentId}`);
 }
 
 /**
@@ -76,17 +90,21 @@ export async function deleteAgent(agentId: string): Promise<void> {
 export async function executeAgent(
   agentName: string,
   request: {
-    execution_type: 'new_message' | 'user_input_response' | 'platform_function_result';
+    execution_type:
+      | "new_message"
+      | "user_input_response"
+      | "platform_function_result";
     message?: string;
     execution_id?: string;
     result?: unknown;
     files?: Array<{ name: string; content: string; type: string }>;
-  }
+  },
+  client?: WachtClient,
 ): Promise<{ status: string }> {
-  const client = getClient();
-  return client.post<{ status: string }>(
+  const sdkClient = client ?? getClient();
+  return sdkClient.post<{ status: string }>(
     `/ai/agents/${agentName}/execute`,
-    request
+    request,
   );
 }
 
@@ -94,31 +112,36 @@ export async function executeAgent(
  * List AI tools
  */
 export async function listTools(
-  options?: ListOptions
+  options?: ListOptions,
+  client?: WachtClient,
 ): Promise<PaginatedResponse<AiTool>> {
-  const client = getClient();
+  const sdkClient = client ?? getClient();
   const params = options
     ? `?limit=${options.limit || 50}&offset=${options.offset || 0}`
-    : '';
-  return client.get<PaginatedResponse<AiTool>>(`/ai/tools${params}`);
+    : "";
+  return sdkClient.get<PaginatedResponse<AiTool>>(`/ai/tools${params}`);
 }
 
 /**
  * Get an AI tool
  */
-export async function getTool(toolId: string): Promise<AiTool> {
-  const client = getClient();
-  return client.get<AiTool>(`/ai/tools/${toolId}`);
+export async function getTool(
+  toolId: string,
+  client?: WachtClient,
+): Promise<AiTool> {
+  const sdkClient = client ?? getClient();
+  return sdkClient.get<AiTool>(`/ai/tools/${toolId}`);
 }
 
 /**
  * Create an AI tool
  */
 export async function createTool(
-  request: CreateAiToolRequest
+  request: CreateAiToolRequest,
+  client?: WachtClient,
 ): Promise<AiTool> {
-  const client = getClient();
-  return client.post<AiTool>('/ai/tools', request);
+  const sdkClient = client ?? getClient();
+  return sdkClient.post<AiTool>("/ai/tools", request);
 }
 
 /**
@@ -126,32 +149,37 @@ export async function createTool(
  */
 export async function updateTool(
   toolId: string,
-  request: UpdateAiToolRequest
+  request: UpdateAiToolRequest,
+  client?: WachtClient,
 ): Promise<AiTool> {
-  const client = getClient();
-  return client.patch<AiTool>(`/ai/tools/${toolId}`, request);
+  const sdkClient = client ?? getClient();
+  return sdkClient.patch<AiTool>(`/ai/tools/${toolId}`, request);
 }
 
 /**
  * Delete an AI tool
  */
-export async function deleteTool(toolId: string): Promise<void> {
-  const client = getClient();
-  return client.delete<void>(`/ai/tools/${toolId}`);
+export async function deleteTool(
+  toolId: string,
+  client?: WachtClient,
+): Promise<void> {
+  const sdkClient = client ?? getClient();
+  return sdkClient.delete<void>(`/ai/tools/${toolId}`);
 }
 
 /**
  * List AI knowledge bases
  */
 export async function listKnowledgeBases(
-  options?: ListOptions
+  options?: ListOptions,
+  client?: WachtClient,
 ): Promise<PaginatedResponse<AiKnowledgeBase>> {
-  const client = getClient();
+  const sdkClient = client ?? getClient();
   const params = options
     ? `?limit=${options.limit || 50}&offset=${options.offset || 0}`
-    : '';
-  return client.get<PaginatedResponse<AiKnowledgeBase>>(
-    `/ai/knowledge-bases${params}`
+    : "";
+  return sdkClient.get<PaginatedResponse<AiKnowledgeBase>>(
+    `/ai/knowledge-bases${params}`,
   );
 }
 
@@ -159,20 +187,22 @@ export async function listKnowledgeBases(
  * Get an AI knowledge base
  */
 export async function getKnowledgeBase(
-  kbId: string
+  kbId: string,
+  client?: WachtClient,
 ): Promise<AiKnowledgeBase> {
-  const client = getClient();
-  return client.get<AiKnowledgeBase>(`/ai/knowledge-bases/${kbId}`);
+  const sdkClient = client ?? getClient();
+  return sdkClient.get<AiKnowledgeBase>(`/ai/knowledge-bases/${kbId}`);
 }
 
 /**
  * Create an AI knowledge base
  */
 export async function createKnowledgeBase(
-  request: CreateAiKnowledgeBaseRequest
+  request: CreateAiKnowledgeBaseRequest,
+  client?: WachtClient,
 ): Promise<AiKnowledgeBase> {
-  const client = getClient();
-  return client.post<AiKnowledgeBase>('/ai/knowledge-bases', request);
+  const sdkClient = client ?? getClient();
+  return sdkClient.post<AiKnowledgeBase>("/ai/knowledge-bases", request);
 }
 
 /**
@@ -180,35 +210,40 @@ export async function createKnowledgeBase(
  */
 export async function updateKnowledgeBase(
   kbId: string,
-  request: UpdateAiKnowledgeBaseRequest
+  request: UpdateAiKnowledgeBaseRequest,
+  client?: WachtClient,
 ): Promise<AiKnowledgeBase> {
-  const client = getClient();
-  return client.patch<AiKnowledgeBase>(
+  const sdkClient = client ?? getClient();
+  return sdkClient.patch<AiKnowledgeBase>(
     `/ai/knowledge-bases/${kbId}`,
-    request
+    request,
   );
 }
 
 /**
  * Delete an AI knowledge base
  */
-export async function deleteKnowledgeBase(kbId: string): Promise<void> {
-  const client = getClient();
-  return client.delete<void>(`/ai/knowledge-bases/${kbId}`);
+export async function deleteKnowledgeBase(
+  kbId: string,
+  client?: WachtClient,
+): Promise<void> {
+  const sdkClient = client ?? getClient();
+  return sdkClient.delete<void>(`/ai/knowledge-bases/${kbId}`);
 }
 
 /**
  * List AI execution contexts
  */
 export async function listExecutionContexts(
-  options?: ListOptions
+  options?: ListOptions,
+  client?: WachtClient,
 ): Promise<PaginatedResponse<AiExecutionContext>> {
-  const client = getClient();
+  const sdkClient = client ?? getClient();
   const params = options
     ? `?limit=${options.limit || 50}&offset=${options.offset || 0}`
-    : '';
-  return client.get<PaginatedResponse<AiExecutionContext>>(
-    `/ai/execution-contexts${params}`
+    : "";
+  return sdkClient.get<PaginatedResponse<AiExecutionContext>>(
+    `/ai/execution-contexts${params}`,
   );
 }
 
@@ -216,10 +251,11 @@ export async function listExecutionContexts(
  * Create an AI execution context
  */
 export async function createExecutionContext(
-  request: CreateAiExecutionContextRequest
+  request: CreateAiExecutionContextRequest,
+  client?: WachtClient,
 ): Promise<AiExecutionContext> {
-  const client = getClient();
-  return client.post<AiExecutionContext>('/ai/execution-contexts', request);
+  const sdkClient = client ?? getClient();
+  return sdkClient.post<AiExecutionContext>("/ai/execution-contexts", request);
 }
 
 /**
@@ -227,12 +263,13 @@ export async function createExecutionContext(
  */
 export async function updateExecutionContext(
   contextId: string,
-  request: UpdateAiExecutionContextRequest
+  request: UpdateAiExecutionContextRequest,
+  client?: WachtClient,
 ): Promise<AiExecutionContext> {
-  const client = getClient();
-  return client.patch<AiExecutionContext>(
+  const sdkClient = client ?? getClient();
+  return sdkClient.patch<AiExecutionContext>(
     `/ai/execution-contexts/${contextId}`,
-    request
+    request,
   );
 }
 
@@ -240,10 +277,11 @@ export async function updateExecutionContext(
  * Delete an AI execution context
  */
 export async function deleteExecutionContext(
-  contextId: string
+  contextId: string,
+  client?: WachtClient,
 ): Promise<void> {
-  const client = getClient();
-  return client.delete<void>(`/ai/execution-contexts/${contextId}`);
+  const sdkClient = client ?? getClient();
+  return sdkClient.delete<void>(`/ai/execution-contexts/${contextId}`);
 }
 
 // ============================================================
@@ -255,14 +293,15 @@ export async function deleteExecutionContext(
  */
 export async function listAgentIntegrations(
   agentId: string,
-  options?: ListOptions
+  options?: ListOptions,
+  client?: WachtClient,
 ): Promise<PaginatedResponse<AgentIntegration>> {
-  const client = getClient();
+  const sdkClient = client ?? getClient();
   const params = options
     ? `?limit=${options.limit || 50}&offset=${options.offset || 0}`
-    : '';
-  return client.get<PaginatedResponse<AgentIntegration>>(
-    `/ai/agents/${agentId}/integrations${params}`
+    : "";
+  return sdkClient.get<PaginatedResponse<AgentIntegration>>(
+    `/ai/agents/${agentId}/integrations${params}`,
   );
 }
 
@@ -271,11 +310,12 @@ export async function listAgentIntegrations(
  */
 export async function getAgentIntegration(
   agentId: string,
-  integrationId: string
+  integrationId: string,
+  client?: WachtClient,
 ): Promise<AgentIntegration> {
-  const client = getClient();
-  return client.get<AgentIntegration>(
-    `/ai/agents/${agentId}/integrations/${integrationId}`
+  const sdkClient = client ?? getClient();
+  return sdkClient.get<AgentIntegration>(
+    `/ai/agents/${agentId}/integrations/${integrationId}`,
   );
 }
 
@@ -284,12 +324,13 @@ export async function getAgentIntegration(
  */
 export async function createAgentIntegration(
   agentId: string,
-  request: CreateAgentIntegrationRequest
+  request: CreateAgentIntegrationRequest,
+  client?: WachtClient,
 ): Promise<AgentIntegration> {
-  const client = getClient();
-  return client.post<AgentIntegration>(
+  const sdkClient = client ?? getClient();
+  return sdkClient.post<AgentIntegration>(
     `/ai/agents/${agentId}/integrations`,
-    request
+    request,
   );
 }
 
@@ -299,12 +340,13 @@ export async function createAgentIntegration(
 export async function updateAgentIntegration(
   agentId: string,
   integrationId: string,
-  request: UpdateAgentIntegrationRequest
+  request: UpdateAgentIntegrationRequest,
+  client?: WachtClient,
 ): Promise<AgentIntegration> {
-  const client = getClient();
-  return client.patch<AgentIntegration>(
+  const sdkClient = client ?? getClient();
+  return sdkClient.patch<AgentIntegration>(
     `/ai/agents/${agentId}/integrations/${integrationId}`,
-    request
+    request,
   );
 }
 
@@ -313,11 +355,12 @@ export async function updateAgentIntegration(
  */
 export async function deleteAgentIntegration(
   agentId: string,
-  integrationId: string
+  integrationId: string,
+  client?: WachtClient,
 ): Promise<void> {
-  const client = getClient();
-  return client.delete<void>(
-    `/ai/agents/${agentId}/integrations/${integrationId}`
+  const sdkClient = client ?? getClient();
+  return sdkClient.delete<void>(
+    `/ai/agents/${agentId}/integrations/${integrationId}`,
   );
 }
 
@@ -330,15 +373,16 @@ export async function deleteAgentIntegration(
  */
 export async function listKnowledgeBaseDocuments(
   kbId: string,
-  options?: { limit?: number; offset?: number }
+  options?: { limit?: number; offset?: number },
+  client?: WachtClient,
 ): Promise<PaginatedResponse<AiKnowledgeBaseDocument>> {
-  const client = getClient();
+  const sdkClient = client ?? getClient();
   const params =
     options && options.limit
       ? `?limit=${options.limit}&offset=${options.offset || 0}`
-      : '';
-  return client.get<PaginatedResponse<AiKnowledgeBaseDocument>>(
-    `/ai/knowledge-bases/${kbId}/documents${params}`
+      : "";
+  return sdkClient.get<PaginatedResponse<AiKnowledgeBaseDocument>>(
+    `/ai/knowledge-bases/${kbId}/documents${params}`,
   );
 }
 
@@ -349,22 +393,23 @@ export async function uploadKnowledgeBaseDocument(
   kbId: string,
   file: File,
   title?: string,
-  description?: string
+  description?: string,
+  client?: WachtClient,
 ): Promise<AiKnowledgeBaseDocument> {
-  const client = getClient();
+  const sdkClient = client ?? getClient();
   const formData = new FormData();
-  formData.append('file', file);
-  if (title) formData.append('title', title);
-  if (description) formData.append('description', description);
+  formData.append("file", file);
+  if (title) formData.append("title", title);
+  if (description) formData.append("description", description);
 
-  return client.post<AiKnowledgeBaseDocument>(
+  return sdkClient.post<AiKnowledgeBaseDocument>(
     `/ai/knowledge-bases/${kbId}/documents`,
     formData,
     {
       headers: {
-        'Content-Type': 'multipart/form-data',
+        "Content-Type": "multipart/form-data",
       },
-    }
+    },
   );
 }
 
@@ -373,11 +418,12 @@ export async function uploadKnowledgeBaseDocument(
  */
 export async function deleteKnowledgeBaseDocument(
   kbId: string,
-  documentId: string
+  documentId: string,
+  client?: WachtClient,
 ): Promise<void> {
-  const client = getClient();
-  return client.delete<void>(
-    `/ai/knowledge-bases/${kbId}/documents/${documentId}`
+  const sdkClient = client ?? getClient();
+  return sdkClient.delete<void>(
+    `/ai/knowledge-bases/${kbId}/documents/${documentId}`,
   );
 }
 
@@ -390,12 +436,13 @@ export async function deleteKnowledgeBaseDocument(
  */
 export async function executeAgentInContext(
   contextId: string,
-  request: ExecuteAgentRequest
+  request: ExecuteAgentRequest,
+  client?: WachtClient,
 ): Promise<ExecuteAgentResponse> {
-  const client = getClient();
-  return client.post<ExecuteAgentResponse>(
+  const sdkClient = client ?? getClient();
+  return sdkClient.post<ExecuteAgentResponse>(
     `/ai/execution-contexts/${contextId}/execute`,
-    request
+    request,
   );
 }
 
@@ -406,27 +453,30 @@ export async function executeAgentInContext(
 /**
  * Get AI settings
  */
-export async function getAiSettings(): Promise<{
+export async function getAiSettings(client?: WachtClient): Promise<{
   enabled_models: string[];
   default_model: string;
 }> {
-  const client = getClient();
-  return client.get<{ enabled_models: string[]; default_model: string }>(
-    '/ai/settings'
+  const sdkClient = client ?? getClient();
+  return sdkClient.get<{ enabled_models: string[]; default_model: string }>(
+    "/ai/settings",
   );
 }
 
 /**
  * Update AI settings
  */
-export async function updateAiSettings(request: {
-  enabled_models?: string[];
-  default_model?: string;
-}): Promise<{ enabled_models: string[]; default_model: string }> {
-  const client = getClient();
-  return client.put<{ enabled_models: string[]; default_model: string }>(
-    '/ai/settings',
-    request
+export async function updateAiSettings(
+  request: {
+    enabled_models?: string[];
+    default_model?: string;
+  },
+  client?: WachtClient,
+): Promise<{ enabled_models: string[]; default_model: string }> {
+  const sdkClient = client ?? getClient();
+  return sdkClient.put<{ enabled_models: string[]; default_model: string }>(
+    "/ai/settings",
+    request,
   );
 }
 
@@ -434,10 +484,11 @@ export async function updateAiSettings(request: {
  * Get agent details (extended information)
  */
 export async function getAgentDetails(
-  agentId: string
+  agentId: string,
+  client?: WachtClient,
 ): Promise<AiAgent & { configuration?: Record<string, unknown> }> {
-  const client = getClient();
-  return client.get<AiAgent & { configuration?: Record<string, unknown> }>(
-    `/ai/agents/${agentId}/details`
+  const sdkClient = client ?? getClient();
+  return sdkClient.get<AiAgent & { configuration?: Record<string, unknown> }>(
+    `/ai/agents/${agentId}/details`,
   );
 }

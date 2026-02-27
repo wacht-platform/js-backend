@@ -1,4 +1,4 @@
-import { getClient } from '../client';
+import { getClient, type WachtClient } from "../client";
 import type {
   DeploymentRestrictionsUpdates,
   DeploymentB2bSettingsUpdates,
@@ -10,52 +10,60 @@ import type {
   SmtpConfigRequest,
   SmtpConfigResponse,
   SmtpVerifyResponse,
-} from '../models';
+} from "../models";
 
 /**
  * Update deployment restrictions
  */
 export async function updateDeploymentRestrictions(
-  request: DeploymentRestrictionsUpdates
+  request: DeploymentRestrictionsUpdates,
+  client?: WachtClient,
 ): Promise<void> {
-  const client = getClient();
-  return client.patch<void>('/settings/restrictions', request);
+  const sdkClient = client ?? getClient();
+  return sdkClient.patch<void>("/settings/restrictions", request);
 }
 
 /**
  * Update B2B settings
  */
 export async function updateB2BSettings(
-  request: DeploymentB2bSettingsUpdates
+  request: DeploymentB2bSettingsUpdates,
+  client?: WachtClient,
 ): Promise<void> {
-  const client = getClient();
-  return client.patch<void>('/settings/b2b', request);
+  const sdkClient = client ?? getClient();
+  return sdkClient.patch<void>("/settings/b2b", request);
 }
 
 /**
  * List JWT templates
  */
-export async function listJwtTemplates(): Promise<JwtTemplate[]> {
-  const client = getClient();
-  return client.get<JwtTemplate[]>('/jwt-templates');
+export async function listJwtTemplates(
+  client?: WachtClient,
+): Promise<JwtTemplate[]> {
+  const sdkClient = client ?? getClient();
+  return sdkClient.get<JwtTemplate[]>("/jwt-templates");
 }
 
 /**
  * Get a JWT template
  */
-export async function getJwtTemplate(templateId: string): Promise<JwtTemplate> {
-  const client = getClient();
-  return client.get<JwtTemplate>(`/jwt-templates/${templateId}`);
+export async function getJwtTemplate(
+  templateId: string,
+  client?: WachtClient,
+): Promise<JwtTemplate> {
+  const sdkClient = client ?? getClient();
+  return sdkClient.get<JwtTemplate>(`/jwt-templates/${templateId}`);
 }
 
 /**
  * Create a JWT template
  */
 export async function createJwtTemplate(
-  request: CreateJwtTemplateRequest
+  request: CreateJwtTemplateRequest,
+  client?: WachtClient,
 ): Promise<JwtTemplate> {
-  const client = getClient();
-  return client.post<JwtTemplate>('/jwt-templates', request);
+  const sdkClient = client ?? getClient();
+  return sdkClient.post<JwtTemplate>("/jwt-templates", request);
 }
 
 /**
@@ -63,30 +71,34 @@ export async function createJwtTemplate(
  */
 export async function updateJwtTemplate(
   templateId: string,
-  request: UpdateJwtTemplateRequest
+  request: UpdateJwtTemplateRequest,
+  client?: WachtClient,
 ): Promise<JwtTemplate> {
-  const client = getClient();
-  return client.patch<JwtTemplate>(
-    `/jwt-templates/${templateId}`,
-    request
-  );
+  const sdkClient = client ?? getClient();
+  return sdkClient.patch<JwtTemplate>(`/jwt-templates/${templateId}`, request);
 }
 
 /**
  * Delete a JWT template
  */
-export async function deleteJwtTemplate(templateId: string): Promise<void> {
-  const client = getClient();
-  return client.delete<void>(`/jwt-templates/${templateId}`);
+export async function deleteJwtTemplate(
+  templateId: string,
+  client?: WachtClient,
+): Promise<void> {
+  const sdkClient = client ?? getClient();
+  return sdkClient.delete<void>(`/jwt-templates/${templateId}`);
 }
 
 /**
  * Get an email template
  */
-export async function getEmailTemplate(templateName: string): Promise<EmailTemplate> {
-  const client = getClient();
-  return client.get<EmailTemplate>(
-    `/settings/email-templates/${templateName}`
+export async function getEmailTemplate(
+  templateName: string,
+  client?: WachtClient,
+): Promise<EmailTemplate> {
+  const sdkClient = client ?? getClient();
+  return sdkClient.get<EmailTemplate>(
+    `/settings/email-templates/${templateName}`,
   );
 }
 
@@ -95,33 +107,37 @@ export async function getEmailTemplate(templateName: string): Promise<EmailTempl
  */
 export async function updateEmailTemplate(
   templateName: string,
-  template: EmailTemplate
+  template: EmailTemplate,
+  client?: WachtClient,
 ): Promise<void> {
-  const client = getClient();
-  return client.patch<void>(
+  const sdkClient = client ?? getClient();
+  return sdkClient.patch<void>(
     `/settings/email-templates/${templateName}`,
-    template
+    template,
   );
 }
 
 /**
  * Get social connections
  */
-export async function getSocialConnections(): Promise<SocialConnection[]> {
-  const client = getClient();
-  return client.get<SocialConnection[]>('/settings/social-connections');
+export async function getSocialConnections(
+  client?: WachtClient,
+): Promise<SocialConnection[]> {
+  const sdkClient = client ?? getClient();
+  return sdkClient.get<SocialConnection[]>("/settings/social-connections");
 }
 
 /**
  * Upsert a social connection
  */
 export async function upsertSocialConnection(
-  connection: SocialConnection
+  connection: SocialConnection,
+  client?: WachtClient,
 ): Promise<SocialConnection> {
-  const client = getClient();
-  return client.put<SocialConnection>(
-    '/settings/social-connections',
-    connection
+  const sdkClient = client ?? getClient();
+  return sdkClient.put<SocialConnection>(
+    "/settings/social-connections",
+    connection,
   );
 }
 
@@ -129,49 +145,51 @@ export async function upsertSocialConnection(
  * Update SMTP configuration
  */
 export async function updateSmtpConfig(
-  request: SmtpConfigRequest
+  request: SmtpConfigRequest,
+  client?: WachtClient,
 ): Promise<SmtpConfigResponse> {
-  const client = getClient();
-  return client.post<SmtpConfigResponse>(
-    '/settings/email/smtp',
-    request
-  );
+  const sdkClient = client ?? getClient();
+  return sdkClient.post<SmtpConfigResponse>("/settings/email/smtp", request);
 }
 
 /**
  * Remove SMTP configuration
  */
-export async function removeSmtpConfig(): Promise<void> {
-  const client = getClient();
-  return client.delete<void>('/settings/email/smtp');
+export async function removeSmtpConfig(client?: WachtClient): Promise<void> {
+  const sdkClient = client ?? getClient();
+  return sdkClient.delete<void>("/settings/email/smtp");
 }
 
 /**
  * Verify SMTP connection
  */
 export async function verifySmtpConnection(
-  request: SmtpConfigRequest
+  request: SmtpConfigRequest,
+  client?: WachtClient,
 ): Promise<SmtpVerifyResponse> {
-  const client = getClient();
-  return client.post<SmtpVerifyResponse>(
-    '/settings/email/smtp/verify',
-    request
+  const sdkClient = client ?? getClient();
+  return sdkClient.post<SmtpVerifyResponse>(
+    "/settings/email/smtp/verify",
+    request,
   );
 }
 
 /**
  * Update display settings
  */
-export async function updateDisplaySettings(request: {
-  display_name?: string;
-  primary_color?: string;
-  logo_url?: string;
-  favicon_url?: string;
-  custom_css?: string;
-  theme?: 'light' | 'dark' | 'auto';
-  locale?: string;
-  timezone?: string;
-}): Promise<{
+export async function updateDisplaySettings(
+  request: {
+    display_name?: string;
+    primary_color?: string;
+    logo_url?: string;
+    favicon_url?: string;
+    custom_css?: string;
+    theme?: "light" | "dark" | "auto";
+    locale?: string;
+    timezone?: string;
+  },
+  client?: WachtClient,
+): Promise<{
   display_name?: string;
   primary_color?: string;
   logo_url?: string;
@@ -179,40 +197,43 @@ export async function updateDisplaySettings(request: {
   custom_css?: string;
   theme?: string;
 }> {
-  const client = getClient();
-  return client.patch<{
+  const sdkClient = client ?? getClient();
+  return sdkClient.patch<{
     display_name?: string;
     primary_color?: string;
     logo_url?: string;
     favicon_url?: string;
     custom_css?: string;
     theme?: string;
-  }>('/settings/display', request);
+  }>("/settings/display", request);
 }
 
 /**
  * Update auth settings
  */
-export async function updateAuthSettings(request: {
-  allowed_domains?: string[];
-  password_min_length?: number;
-  password_require_uppercase?: boolean;
-  password_require_lowercase?: boolean;
-  password_require_numbers?: boolean;
-  password_require_special_chars?: boolean;
-  mfa_enabled?: boolean;
-  mfa_methods?: Array<'totp' | 'sms' | 'email'>;
-  session_timeout?: number;
-  refresh_token_expiration?: number;
-}): Promise<{
+export async function updateAuthSettings(
+  request: {
+    allowed_domains?: string[];
+    password_min_length?: number;
+    password_require_uppercase?: boolean;
+    password_require_lowercase?: boolean;
+    password_require_numbers?: boolean;
+    password_require_special_chars?: boolean;
+    mfa_enabled?: boolean;
+    mfa_methods?: Array<"totp" | "sms" | "email">;
+    session_timeout?: number;
+    refresh_token_expiration?: number;
+  },
+  client?: WachtClient,
+): Promise<{
   allowed_domains?: string[];
   password_min_length?: number;
   mfa_enabled?: boolean;
 }> {
-  const client = getClient();
-  return client.patch<{
+  const sdkClient = client ?? getClient();
+  return sdkClient.patch<{
     allowed_domains?: string[];
     password_min_length?: number;
     mfa_enabled?: boolean;
-  }>('/settings/auth', request);
+  }>("/settings/auth", request);
 }

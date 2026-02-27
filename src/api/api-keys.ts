@@ -1,4 +1,9 @@
-import { getClient, type PaginatedResponse, type ListOptions } from '../client';
+import {
+  getClient,
+  type WachtClient,
+  type PaginatedResponse,
+  type ListOptions,
+} from "../client";
 import type {
   ApiAuthApp,
   CreateApiAuthAppRequest,
@@ -8,41 +13,45 @@ import type {
   CreateApiKeyRequest,
   RevokeApiKeyRequest,
   RotateApiKeyRequest,
-  ApiKeyScopeInfo,
-} from '../models';
+} from "../models";
 
 /**
  * List API auth apps
  */
 export async function listApiAuthApps(
-  options?: ListOptions & { include_inactive?: boolean }
+  options?: ListOptions & { include_inactive?: boolean },
+  client?: WachtClient,
 ): Promise<ApiAuthApp[]> {
-  const client = getClient();
+  const sdkClient = client ?? getClient();
   const params = new URLSearchParams();
   if (options?.include_inactive !== undefined)
-    params.append('include_inactive', String(options.include_inactive));
+    params.append("include_inactive", String(options.include_inactive));
   const queryString = params.toString();
-  return client.get<ApiAuthApp[]>(
-    `/api-auth/apps${queryString ? `?${queryString}` : ''}`
+  return sdkClient.get<ApiAuthApp[]>(
+    `/api-auth/apps${queryString ? `?${queryString}` : ""}`,
   );
 }
 
 /**
  * Get an API auth app by name
  */
-export async function getApiAuthApp(appName: string): Promise<ApiAuthApp> {
-  const client = getClient();
-  return client.get<ApiAuthApp>(`/api-auth/apps/${appName}`);
+export async function getApiAuthApp(
+  appName: string,
+  client?: WachtClient,
+): Promise<ApiAuthApp> {
+  const sdkClient = client ?? getClient();
+  return sdkClient.get<ApiAuthApp>(`/api-auth/apps/${appName}`);
 }
 
 /**
  * Create an API auth app
  */
 export async function createApiAuthApp(
-  request: CreateApiAuthAppRequest
+  request: CreateApiAuthAppRequest,
+  client?: WachtClient,
 ): Promise<ApiAuthApp> {
-  const client = getClient();
-  return client.post<ApiAuthApp>('/api-auth/apps', request);
+  const sdkClient = client ?? getClient();
+  return sdkClient.post<ApiAuthApp>("/api-auth/apps", request);
 }
 
 /**
@@ -50,21 +59,22 @@ export async function createApiAuthApp(
  */
 export async function updateApiAuthApp(
   appName: string,
-  request: UpdateApiAuthAppRequest
+  request: UpdateApiAuthAppRequest,
+  client?: WachtClient,
 ): Promise<ApiAuthApp> {
-  const client = getClient();
-  return client.patch<ApiAuthApp>(
-    `/api-auth/apps/${appName}`,
-    request
-  );
+  const sdkClient = client ?? getClient();
+  return sdkClient.patch<ApiAuthApp>(`/api-auth/apps/${appName}`, request);
 }
 
 /**
  * Delete an API auth app
  */
-export async function deleteApiAuthApp(appName: string): Promise<void> {
-  const client = getClient();
-  return client.delete<void>(`/api-auth/apps/${appName}`);
+export async function deleteApiAuthApp(
+  appName: string,
+  client?: WachtClient,
+): Promise<void> {
+  const sdkClient = client ?? getClient();
+  return sdkClient.delete<void>(`/api-auth/apps/${appName}`);
 }
 
 /**
@@ -72,15 +82,16 @@ export async function deleteApiAuthApp(appName: string): Promise<void> {
  */
 export async function listApiKeys(
   appName: string,
-  options?: ListOptions & { include_inactive?: boolean }
+  options?: ListOptions & { include_inactive?: boolean },
+  client?: WachtClient,
 ): Promise<ApiKey[]> {
-  const client = getClient();
+  const sdkClient = client ?? getClient();
   const params = new URLSearchParams();
   if (options?.include_inactive !== undefined)
-    params.append('include_inactive', String(options.include_inactive));
+    params.append("include_inactive", String(options.include_inactive));
   const queryString = params.toString();
-  return client.get<ApiKey[]>(
-    `/api-auth/apps/${appName}/keys${queryString ? `?${queryString}` : ''}`
+  return sdkClient.get<ApiKey[]>(
+    `/api-auth/apps/${appName}/keys${queryString ? `?${queryString}` : ""}`,
   );
 }
 
@@ -89,44 +100,34 @@ export async function listApiKeys(
  */
 export async function createApiKey(
   appName: string,
-  request: CreateApiKeyRequest
+  request: CreateApiKeyRequest,
+  client?: WachtClient,
 ): Promise<ApiKeyWithSecret> {
-  const client = getClient();
-  return client.post<ApiKeyWithSecret>(
+  const sdkClient = client ?? getClient();
+  return sdkClient.post<ApiKeyWithSecret>(
     `/api-auth/apps/${appName}/keys`,
-    request
+    request,
   );
 }
 
 /**
  * Revoke an API key
  */
-export async function revokeApiKey(request: RevokeApiKeyRequest): Promise<void> {
-  const client = getClient();
-  return client.post<void>('/api-auth/keys/revoke', request);
+export async function revokeApiKey(
+  request: RevokeApiKeyRequest,
+  client?: WachtClient,
+): Promise<void> {
+  const sdkClient = client ?? getClient();
+  return sdkClient.post<void>("/api-auth/keys/revoke", request);
 }
 
 /**
  * Rotate an API key
  */
 export async function rotateApiKey(
-  request: RotateApiKeyRequest
+  request: RotateApiKeyRequest,
+  client?: WachtClient,
 ): Promise<ApiKeyWithSecret> {
-  const client = getClient();
-  return client.post<ApiKeyWithSecret>('/api-auth/keys/rotate', request);
-}
-
-/**
- * Get available API key scopes
- */
-export async function getAvailableScopes(): Promise<{
-  scopes: ApiKeyScopeInfo[];
-  presets: Array<{
-    name: string;
-    description: string;
-    scopes: string[];
-  }>;
-}> {
-  const client = getClient();
-  return client.get('/api-auth/scopes');
+  const sdkClient = client ?? getClient();
+  return sdkClient.post<ApiKeyWithSecret>("/api-auth/keys/rotate", request);
 }

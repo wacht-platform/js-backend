@@ -1,28 +1,35 @@
-import { getClient } from '../client';
-import type { AnalyticsStats, RecentSignup, RecentSignupOrganization } from '../models';
+import { getClient, type WachtClient } from "../client";
+import type {
+  AnalyticsStats,
+  RecentSignup,
+  RecentSignupOrganization,
+} from "../models";
 
 /**
  * Get analytics summary
  */
-export async function getAnalyticsSummary(): Promise<AnalyticsStats> {
-  const client = getClient();
-  return client.get<AnalyticsStats>('/analytics/summary');
+export async function getAnalyticsSummary(
+  client?: WachtClient,
+): Promise<AnalyticsStats> {
+  const sdkClient = client ?? getClient();
+  return sdkClient.get<AnalyticsStats>("/analytics/summary");
 }
 
 /**
  * Get recent signups
  */
 export async function getRecentSignups(
-  options?: { limit?: number; offset?: number }
+  options?: { limit?: number; offset?: number },
+  client?: WachtClient,
 ): Promise<RecentSignup[]> {
-  const client = getClient();
+  const sdkClient = client ?? getClient();
   const params = new URLSearchParams();
-  if (options?.limit) params.append('limit', String(options.limit));
+  if (options?.limit) params.append("limit", String(options.limit));
   if (options?.offset !== undefined)
-    params.append('offset', String(options.offset));
+    params.append("offset", String(options.offset));
   const queryString = params.toString();
-  return client.get<RecentSignup[]>(
-    `/analytics/recent-signups${queryString ? `?${queryString}` : ''}`
+  return sdkClient.get<RecentSignup[]>(
+    `/analytics/recent-signups${queryString ? `?${queryString}` : ""}`,
   );
 }
 
@@ -30,15 +37,16 @@ export async function getRecentSignups(
  * Get recent signins
  */
 export async function getRecentSignins(
-  options?: { limit?: number; offset?: number }
+  options?: { limit?: number; offset?: number },
+  client?: WachtClient,
 ): Promise<RecentSignup[]> {
-  const client = getClient();
+  const sdkClient = client ?? getClient();
   const params = new URLSearchParams();
-  if (options?.limit) params.append('limit', String(options.limit));
+  if (options?.limit) params.append("limit", String(options.limit));
   if (options?.offset !== undefined)
-    params.append('offset', String(options.offset));
+    params.append("offset", String(options.offset));
   const queryString = params.toString();
-  return client.get<RecentSignup[]>(
-    `/analytics/recent-signins${queryString ? `?${queryString}` : ''}`
+  return sdkClient.get<RecentSignup[]>(
+    `/analytics/recent-signins${queryString ? `?${queryString}` : ""}`,
   );
 }
