@@ -208,12 +208,25 @@ export interface UploadKnowledgeBaseDocumentRequest {
  * Execute agent request
  */
 export interface ExecuteAgentRequest {
-  type: 'new_message' | 'user_input_response' | 'platform_function_result';
-  agent_name: string;
-  message?: string;
-  execution_id?: string;
-  result?: Record<string, unknown>;
-  files?: Array<Record<string, unknown>>;
+  agent_name?: string;
+  execution_type: {
+    new_message?: {
+      message: string;
+      files?: Array<{
+        filename: string;
+        mime_type: string;
+        data: string;
+      }>;
+    };
+    user_input_response?: {
+      message: string;
+    };
+    platform_function_result?: {
+      execution_id: string;
+      result: Record<string, unknown>;
+    };
+    cancel?: Record<string, never>;
+  };
 }
 
 /**
@@ -221,4 +234,5 @@ export interface ExecuteAgentRequest {
  */
 export interface ExecuteAgentResponse {
   status: string;
+  conversation_id?: string;
 }

@@ -191,9 +191,16 @@ export interface SessionTicketResponse {
  * Session ticket request
  */
 export interface CreateSessionTicketRequest {
-  ticket_type: 'impersonation' | 'agent_access';
+  ticket_type:
+    | 'impersonation'
+    | 'agent_access'
+    | 'webhook_app_access'
+    | 'api_auth_access';
   user_id?: string;
   agent_ids?: string[];
+  agent_session_identifier?: 'static' | 'signin';
+  webhook_app_slug?: string;
+  api_auth_app_slug?: string;
   context_group?: string;
   expires_in?: number;
 }

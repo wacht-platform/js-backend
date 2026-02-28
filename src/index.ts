@@ -197,15 +197,11 @@ import type {
   TriggerWebhookRequest,
   WebhookEndpoint,
   WebhookDelivery,
-  WebhookEvent,
-  WebhookStats,
+  WebhookAppEvent,
+  WebhookDeliveryDetails,
   WebhookTimeseriesData,
   CreateWebhookEndpointRequest,
   UpdateWebhookEndpointRequest,
-  WebhookEventDefinition,
-  WebhookEventFilter,
-  HttpMethod,
-  WebhookDeliveryAttempt,
   WebhookAnalytics,
 } from "./models/webhook";
 import type {
@@ -395,15 +391,11 @@ export type {
 export type {
   WebhookEndpoint,
   WebhookDelivery,
-  WebhookEvent,
-  WebhookStats,
+  WebhookAppEvent,
+  WebhookDeliveryDetails,
   WebhookTimeseriesData,
   CreateWebhookEndpointRequest,
   UpdateWebhookEndpointRequest,
-  WebhookEventDefinition,
-  WebhookEventFilter,
-  HttpMethod,
-  WebhookDeliveryAttempt,
   WebhookAnalytics,
 };
 export type {
