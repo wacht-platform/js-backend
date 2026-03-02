@@ -208,7 +208,9 @@ export async function deleteWebhookEndpoint(
   client?: WachtClient,
 ): Promise<void> {
   const sdkClient = client ?? getClient();
-  return sdkClient.delete<void>(`/webhooks/apps/${appSlug}/endpoints/${endpointId}`);
+  return sdkClient.delete<void>(
+    `/webhooks/apps/${appSlug}/endpoints/${endpointId}`,
+  );
 }
 
 /**

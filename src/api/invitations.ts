@@ -8,8 +8,6 @@ import type {
   DeploymentInvitation,
   DeploymentWaitlistUser,
   InviteUserRequest,
-  CreateSessionTicketRequest,
-  SessionTicketResponse,
 } from "../models/user";
 
 /**
@@ -97,13 +95,3 @@ export async function approveWaitlistUser(
   );
 }
 
-/**
- * Create session ticket
- */
-export async function createSessionTicket(
-  request: CreateSessionTicketRequest,
-  client?: WachtClient,
-): Promise<SessionTicketResponse> {
-  const sdkClient = client ?? getClient();
-  return sdkClient.post<SessionTicketResponse>("/session/tickets", request);
-}

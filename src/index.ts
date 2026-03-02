@@ -234,6 +234,7 @@ import * as notifications from "./api/notifications";
 import * as webhooks from "./api/webhooks";
 import * as ai from "./api/ai";
 import * as segments from "./api/segments";
+import * as sessions from "./api/sessions";
 import * as invitations from "./api/invitations";
 import * as analytics from "./api/analytics";
 import * as utility from "./api/utility";
@@ -433,6 +434,7 @@ export {
   webhooks,
   ai,
   segments,
+  sessions,
   invitations,
   analytics,
   utility,
