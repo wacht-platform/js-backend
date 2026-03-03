@@ -59,7 +59,8 @@ export interface AuthzMetadata {
   organization_permissions?: string[];
   workspace_permissions?: string[];
   scopes?: string[];
-  resource?: string | null;
+  oauth_resource?: string | null;
+  granted_resource?: string | null;
   expires_at?: string;
   [key: string]: unknown;
 }

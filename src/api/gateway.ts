@@ -249,8 +249,14 @@ export function resolveGatewayPrincipalContext(
         (value): value is string => typeof value === "string",
       )
     : [];
-  const resource =
-    typeof rawMetadata.resource === "string" ? rawMetadata.resource : null;
+  const grantedResource =
+    typeof rawMetadata.granted_resource === "string"
+      ? rawMetadata.granted_resource
+      : null;
+  const oauthResource =
+    typeof rawMetadata.oauth_resource === "string"
+      ? rawMetadata.oauth_resource
+      : null;
   const expiresAt =
     typeof rawMetadata.expires_at === "string"
       ? rawMetadata.expires_at
@@ -266,7 +272,8 @@ export function resolveGatewayPrincipalContext(
       organization_permissions: organizationPermissions,
       workspace_permissions: workspacePermissions,
       scopes,
-      resource,
+      oauth_resource: oauthResource,
+      granted_resource: grantedResource,
       expires_at: expiresAt,
     },
     ownerUserId: identity.owner_user_id || null,
