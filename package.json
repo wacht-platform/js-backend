@@ -1,6 +1,6 @@
 {
   "name": "@wacht/backend",
-  "version": "1.0.0-beta.2",
+  "version": "1.0.0-beta.3",
   "description": "Wacht Backend SDK for JavaScript/TypeScript",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
