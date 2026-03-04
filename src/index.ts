@@ -191,6 +191,22 @@ import type {
   AuthzCheckResponse,
 } from "./models/api-key";
 import type {
+  OAuthScopeDefinition,
+  OAuthApp,
+  OAuthDomainVerificationResponse,
+  CreateOAuthAppRequest,
+  UpdateOAuthAppRequest,
+  UpdateOAuthScopeRequest,
+  SetOAuthScopeMappingRequest,
+  OAuthClient,
+  Jwk,
+  JwksDocument,
+  CreateOAuthClientRequest,
+  UpdateOAuthClientRequest,
+  RotateOAuthClientSecretResponse,
+  OAuthGrant,
+} from "./models/oauth";
+import type {
   WebhookApp,
   CreateWebhookAppRequest,
   UpdateWebhookAppRequest,
@@ -233,6 +249,7 @@ import * as settings from "./api/settings";
 import * as notifications from "./api/notifications";
 import * as webhooks from "./api/webhooks";
 import * as ai from "./api/ai";
+import * as oauth from "./api/oauth";
 import * as segments from "./api/segments";
 import * as sessions from "./api/sessions";
 import * as invitations from "./api/invitations";
@@ -384,6 +401,22 @@ export type {
   AuthzCheckResponse,
 };
 export type {
+  OAuthScopeDefinition,
+  OAuthApp,
+  OAuthDomainVerificationResponse,
+  CreateOAuthAppRequest,
+  UpdateOAuthAppRequest,
+  UpdateOAuthScopeRequest,
+  SetOAuthScopeMappingRequest,
+  OAuthClient,
+  Jwk,
+  JwksDocument,
+  CreateOAuthClientRequest,
+  UpdateOAuthClientRequest,
+  RotateOAuthClientSecretResponse,
+  OAuthGrant,
+};
+export type {
   WebhookApp,
   CreateWebhookAppRequest,
   UpdateWebhookAppRequest,
@@ -433,6 +466,7 @@ export {
   notifications,
   webhooks,
   ai,
+  oauth,
   segments,
   sessions,
   invitations,

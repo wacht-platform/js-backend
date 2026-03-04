@@ -7,6 +7,7 @@ import * as settingsApi from './api/settings';
 import * as notificationsApi from './api/notifications';
 import * as webhooksApi from './api/webhooks';
 import * as aiApi from './api/ai';
+import * as oauthApi from './api/oauth';
 import * as segmentsApi from './api/segments';
 import * as invitationsApi from './api/invitations';
 import * as analyticsApi from './api/analytics';
@@ -97,6 +98,7 @@ export class WachtClient {
   readonly notifications: BoundApi<typeof notificationsApi>;
   readonly webhooks: BoundApi<typeof webhooksApi>;
   readonly ai: BoundApi<typeof aiApi>;
+  readonly oauth: BoundApi<typeof oauthApi>;
   readonly segments: BoundApi<typeof segmentsApi>;
   readonly invitations: BoundApi<typeof invitationsApi>;
   readonly analytics: BoundApi<typeof analyticsApi>;
@@ -122,6 +124,7 @@ export class WachtClient {
     this.notifications = this.bindApi(notificationsApi);
     this.webhooks = this.bindApi(webhooksApi);
     this.ai = this.bindApi(aiApi);
+    this.oauth = this.bindApi(oauthApi);
     this.segments = this.bindApi(segmentsApi);
     this.invitations = this.bindApi(invitationsApi);
     this.analytics = this.bindApi(analyticsApi);

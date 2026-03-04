@@ -10,6 +10,7 @@ export * from './workspace';
 export * from './ai';
 export * from './notification';
 export * from './api-key';
+export * from './oauth';
 export * from './webhook';
 export * from './segment';
 export * from './analytics';
