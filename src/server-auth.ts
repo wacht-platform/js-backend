@@ -1,4 +1,5 @@
-import { compactVerify, importSPKI } from "jose";
+import { p256, p384, p521 } from "@noble/curves/nist.js";
+import { createRemoteJWKSet, errors, jwtVerify } from "jose";
 
 export interface WachtAuth {
   userId: string | null;
@@ -95,11 +96,38 @@ export interface JWTPayload {
 
 interface JWTHeader {
   alg?: string;
+  kid?: string;
 }
 
+interface JWKKey {
+  kid?: string;
+  kty?: string;
+  alg?: string;
+  crv?: string;
+  use?: string;
+  x?: string;
+  y?: string;
+}
+
+interface JWKSResponse {
+  keys?: JWKKey[];
+}
+
+type VerifyAuthTokenReason =
+  | "missing_public_key"
+  | "invalid_signature"
+  | "invalid_time_claims"
+  | "invalid_issuer"
+  | "invalid_token_payload"
+  | "unknown";
+
 const AUTH_HEADER = "x-wacht-auth";
-const PUBLIC_KEY_CACHE_TTL_MS = 5 * 60 * 1000;
-const publicKeyCache = new Map<string, { value: string; expiresAt: number }>();
+const jwksCache = new Map<string, ReturnType<typeof createRemoteJWKSet>>();
+const rawJwksCache = new Map<
+  string,
+  { value: JWKSResponse; expiresAt: number }
+>();
+const RAW_JWKS_CACHE_TTL_MS = 5 * 60 * 1000;
 
 function decodeBase64(input: string): string {
   if (typeof atob === "function") {
@@ -130,13 +158,6 @@ function decodeBase64UrlToBytes(input: string): Uint8Array {
   );
   const raw = decodeBase64(padded);
   return Uint8Array.from(raw, (char) => char.charCodeAt(0));
-}
-
-function toArrayBuffer(bytes: Uint8Array): ArrayBuffer {
-  return bytes.buffer.slice(
-    bytes.byteOffset,
-    bytes.byteOffset + bytes.byteLength,
-  ) as ArrayBuffer;
 }
 
 function decodeJwtPayload(token: string): JWTPayload | null {
@@ -210,92 +231,86 @@ export function parseFrontendApiUrlFromPublishableKey(
   }
 }
 
-function pemToSpkiArrayBuffer(publicKeyPem: string): ArrayBuffer {
-  const pemBody = publicKeyPem
-    .replace("-----BEGIN PUBLIC KEY-----", "")
-    .replace("-----END PUBLIC KEY-----", "")
-    .replace(/\s+/g, "");
-  const decoded = decodeBase64(pemBody);
-  const bytes = Uint8Array.from(decoded, (char) => char.charCodeAt(0));
-  return toArrayBuffer(bytes);
-}
-
-function trimLeadingZeros(bytes: Uint8Array): Uint8Array {
-  let index = 0;
-  while (index < bytes.length - 1 && bytes[index] === 0) {
-    index += 1;
+function sanitizeErrorDetail(error: unknown): string {
+  if (error instanceof Error) {
+    return `${error.name}:${error.message}`
+      .replace(/[\r\n\t]+/g, " ")
+      .replace(/\s+/g, " ")
+      .slice(0, 240);
   }
-  return bytes.subarray(index);
-}
 
-function joseToDerEcdsaSignature(signature: Uint8Array): Uint8Array {
-  const half = Math.floor(signature.length / 2);
-  const r = trimLeadingZeros(signature.subarray(0, half));
-  const s = trimLeadingZeros(signature.subarray(half));
-
-  const rNeedsPad = (r[0] & 0x80) !== 0;
-  const sNeedsPad = (s[0] & 0x80) !== 0;
-
-  const rLength = r.length + (rNeedsPad ? 1 : 0);
-  const sLength = s.length + (sNeedsPad ? 1 : 0);
-  const totalLength = 2 + rLength + 2 + sLength;
-
-  const der = new Uint8Array(2 + totalLength);
-  let offset = 0;
-  der[offset++] = 0x30;
-  der[offset++] = totalLength;
-  der[offset++] = 0x02;
-  der[offset++] = rLength;
-  if (rNeedsPad) der[offset++] = 0x00;
-  der.set(r, offset);
-  offset += r.length;
-  der[offset++] = 0x02;
-  der[offset++] = sLength;
-  if (sNeedsPad) der[offset++] = 0x00;
-  der.set(s, offset);
-  return der;
-}
-
-function resolveHashAlgorithm(alg: string): string {
-  if (alg.endsWith("256")) return "SHA-256";
-  if (alg.endsWith("384")) return "SHA-384";
-  if (alg.endsWith("512")) return "SHA-512";
-  return "SHA-256";
-}
-
-function getSubtleCrypto(): SubtleCrypto | null {
-  const cryptoObj = globalThis.crypto;
-  if (cryptoObj?.subtle) {
-    return cryptoObj.subtle;
-  }
-  return null;
+  return String(error)
+    .replace(/[\r\n\t]+/g, " ")
+    .replace(/\s+/g, " ")
+    .slice(0, 240);
 }
 
 async function verifyJwtSignature(
   token: string,
-  publicKeyPem: string,
-): Promise<JWTPayload | null> {
+  frontendApiUrl: string,
+  options: WachtServerOptions,
+): Promise<{
+  payload: JWTPayload | null;
+  detail: string | null;
+  verifier: string | null;
+  reason: VerifyAuthTokenReason | null;
+}> {
   const header = decodeJwtHeader(token);
-  const payload = decodeJwtPayload(token);
-  if (!header?.alg || !payload) return null;
+  if (!header?.alg) {
+    return {
+      payload: null,
+      detail: "invalid jwt header or payload",
+      verifier: null,
+      reason: "invalid_token_payload",
+    };
+  }
+
   try {
-    const key = await importSPKI(publicKeyPem, header.alg);
-    await compactVerify(token, key, { algorithms: [header.alg] });
-    return payload;
-  } catch {
-    return null;
+    const expectedIssuer = options.requiredIssuer || frontendApiUrl;
+    const jwks = getRemoteJwks(frontendApiUrl);
+    const { payload } = await jwtVerify(token, jwks, {
+      algorithms: [header.alg],
+      issuer: expectedIssuer,
+      clockTolerance: Math.floor((options.clockSkewInMs || 0) / 1000),
+    });
+    return { payload: payload as JWTPayload, detail: "jose", verifier: "jose", reason: null };
+  } catch (error) {
+    const fallback = await verifyEcJwtWithNoble(
+      token,
+      frontendApiUrl,
+      header,
+      options,
+      sanitizeErrorDetail(error),
+    );
+    if (fallback) {
+      return fallback;
+    }
+
+    return {
+      payload: null,
+      detail: sanitizeErrorDetail(error),
+      verifier: "jose",
+      reason: classifyVerifyError(error),
+    };
   }
 }
 
-async function fetchPublicKeyPem(
-  frontendApiUrl: string,
-): Promise<string | null> {
-  const cached = publicKeyCache.get(frontendApiUrl);
+function getRemoteJwks(frontendApiUrl: string) {
+  let jwks = jwksCache.get(frontendApiUrl);
+  if (!jwks) {
+    jwks = createRemoteJWKSet(new URL(`${frontendApiUrl}/.well-known/jwks.json`));
+    jwksCache.set(frontendApiUrl, jwks);
+  }
+  return jwks;
+}
+
+async function fetchRawJwks(frontendApiUrl: string): Promise<JWKSResponse | null> {
+  const cached = rawJwksCache.get(frontendApiUrl);
   if (cached && cached.expiresAt > Date.now()) {
     return cached.value;
   }
 
-  const response = await fetch(`${frontendApiUrl}/.well-known/jwk`, {
+  const response = await fetch(`${frontendApiUrl}/.well-known/jwks.json`, {
     method: "GET",
     headers: {
       Accept: "application/json",
@@ -303,42 +318,217 @@ async function fetchPublicKeyPem(
   });
 
   if (!response.ok) return null;
-  const body = (await response.json()) as { data?: { public_key?: string } };
-  const publicKey = body?.data?.public_key;
-  if (!publicKey) return null;
+  const jwks = (await response.json()) as JWKSResponse;
+  if (!Array.isArray(jwks?.keys)) return null;
 
-  publicKeyCache.set(frontendApiUrl, {
-    value: publicKey,
-    expiresAt: Date.now() + PUBLIC_KEY_CACHE_TTL_MS,
+  rawJwksCache.set(frontendApiUrl, {
+    value: jwks,
+    expiresAt: Date.now() + RAW_JWKS_CACHE_TTL_MS,
   });
+  return jwks;
+}
+
+function expectedCurveForAlgorithm(alg: string): string | null {
+  switch (alg) {
+    case "ES256":
+      return "P-256";
+    case "ES384":
+      return "P-384";
+    case "ES512":
+      return "P-521";
+    default:
+      return null;
+  }
+}
+
+function selectEcJwkForToken(
+  jwks: JWKSResponse,
+  header: JWTHeader,
+): JWKKey | null {
+  const keys = Array.isArray(jwks.keys) ? jwks.keys : [];
+  const expectedCurve = header.alg ? expectedCurveForAlgorithm(header.alg) : null;
+  if (!expectedCurve) return null;
+
+  const filtered = keys.filter((key) => {
+    if (key.kty !== "EC") return false;
+    if (key.use && key.use !== "sig") return false;
+    if (header.kid && key.kid !== header.kid) return false;
+    if (key.alg && header.alg && key.alg !== header.alg) return false;
+    if (key.crv !== expectedCurve) return false;
+    return !!key.x && !!key.y;
+  });
+
+  return filtered[0] || null;
+}
+
+function uncompressedEcPublicKeyFromJwk(key: JWKKey): Uint8Array {
+  const x = decodeBase64UrlToBytes(key.x!);
+  const y = decodeBase64UrlToBytes(key.y!);
+  const publicKey = new Uint8Array(1 + x.length + y.length);
+  publicKey[0] = 0x04;
+  publicKey.set(x, 1);
+  publicKey.set(y, 1 + x.length);
   return publicKey;
 }
 
-function hasValidTimeClaims(
-  payload: JWTPayload,
+async function verifyEcJwtWithNoble(
+  token: string,
+  frontendApiUrl: string,
+  header: JWTHeader,
   options: WachtServerOptions,
-): boolean {
-  const now = Math.floor(Date.now() / 1000);
-  const skewSeconds = Math.floor((options.clockSkewInMs || 0) / 1000);
+  joseDetail: string,
+): Promise<{
+  payload: JWTPayload | null;
+  detail: string | null;
+  verifier: string | null;
+  reason: VerifyAuthTokenReason | null;
+} | null> {
+  const curveName = header.alg ? expectedCurveForAlgorithm(header.alg) : null;
+  if (!curveName) return null;
 
-  if (payload.exp && payload.exp < now - skewSeconds) {
-    return false;
+  const parts = token.split(".");
+  if (parts.length !== 3) {
+    return {
+      payload: null,
+      detail: `${joseDetail}; noble:invalid token shape`,
+      verifier: "jose+noble",
+      reason: "invalid_token_payload",
+    };
   }
-  if (payload.nbf && payload.nbf > now + skewSeconds) {
-    return false;
+
+  const jwks = await fetchRawJwks(frontendApiUrl);
+  if (!jwks) {
+    return {
+      payload: null,
+      detail: `${joseDetail}; noble:jwks unavailable`,
+      verifier: "jose+noble",
+      reason: "missing_public_key",
+    };
   }
-  return true;
+
+  const jwk = selectEcJwkForToken(jwks, header);
+  if (!jwk) {
+    return {
+      payload: null,
+      detail: `${joseDetail}; noble:no matching ec jwk`,
+      verifier: "jose+noble",
+      reason: "missing_public_key",
+    };
+  }
+
+  const payload = decodeJwtPayload(token);
+  if (!payload) {
+    return {
+      payload: null,
+      detail: `${joseDetail}; noble:invalid payload`,
+      verifier: "jose+noble",
+      reason: "invalid_token_payload",
+    };
+  }
+
+  try {
+    const publicKey = uncompressedEcPublicKeyFromJwk(jwk);
+    const signature = decodeBase64UrlToBytes(parts[2]);
+    const signingInput = new TextEncoder().encode(`${parts[0]}.${parts[1]}`);
+
+    let verified = false;
+    switch (header.alg) {
+      case "ES256":
+        verified = p256.verify(signature, signingInput, publicKey, { lowS: false });
+        break;
+      case "ES384":
+        verified = p384.verify(signature, signingInput, publicKey, { lowS: false });
+        break;
+      case "ES512":
+        verified = p521.verify(signature, signingInput, publicKey, { lowS: false });
+        break;
+      default:
+        return null;
+    }
+
+    if (!verified) {
+      return {
+        payload: null,
+        detail: `${joseDetail}; noble:verify returned false`,
+        verifier: "jose+noble",
+        reason: "invalid_signature",
+      };
+    }
+
+    const expectedIssuer = options.requiredIssuer || frontendApiUrl;
+    if (payload.iss !== expectedIssuer) {
+      return {
+        payload: null,
+        detail: `${joseDetail}; noble:issuer mismatch`,
+        verifier: "jose+noble",
+        reason: "invalid_issuer",
+      };
+    }
+
+    const now = Math.floor(Date.now() / 1000);
+    const skewSeconds = Math.floor((options.clockSkewInMs || 0) / 1000);
+    if (payload.exp && payload.exp < now - skewSeconds) {
+      return {
+        payload: null,
+        detail: `${joseDetail}; noble:expired token`,
+        verifier: "jose+noble",
+        reason: "invalid_time_claims",
+      };
+    }
+    if (payload.nbf && payload.nbf > now + skewSeconds) {
+      return {
+        payload: null,
+        detail: `${joseDetail}; noble:not before in future`,
+        verifier: "jose+noble",
+        reason: "invalid_time_claims",
+      };
+    }
+
+    return {
+      payload,
+      detail: `${joseDetail}; noble:fallback verified`,
+      verifier: "noble",
+      reason: null,
+    };
+  } catch (error) {
+    return {
+      payload: null,
+      detail: `${joseDetail}; noble:${sanitizeErrorDetail(error)}`,
+      verifier: "jose+noble",
+      reason: "invalid_signature",
+    };
+  }
 }
 
-function hasValidIssuerClaim(
-  payload: JWTPayload,
-  frontendApiUrl: string,
-  options: WachtServerOptions,
-): boolean {
-  const requiredIssuer = options.requiredIssuer || frontendApiUrl;
-  if (!requiredIssuer) return true;
-  if (!payload.iss) return false;
-  return payload.iss === requiredIssuer;
+function classifyVerifyError(error: unknown): VerifyAuthTokenReason {
+  if (error instanceof errors.JWTExpired || error instanceof errors.JWTClaimValidationFailed) {
+    return "invalid_time_claims";
+  }
+
+  if (error instanceof errors.JWTInvalid) {
+    if (error.code === "ERR_JWT_CLAIM_VALIDATION_FAILED") {
+      return "invalid_issuer";
+    }
+    return "invalid_token_payload";
+  }
+
+  if (
+    error instanceof errors.JWSSignatureVerificationFailed ||
+    error instanceof errors.JOSENotSupported ||
+    error instanceof errors.JWKInvalid ||
+    error instanceof errors.JWKSInvalid
+  ) {
+    return "invalid_signature";
+  }
+
+  if (
+    error instanceof errors.JWKSNoMatchingKey ||
+    error instanceof errors.JWKSMultipleMatchingKeys
+  ) {
+    return "missing_public_key";
+  }
+
+  return "unknown";
 }
 
 function createAuth(
@@ -475,7 +665,7 @@ export async function exchangeSessionForAuthToken(
     endpoint.searchParams.set("__dev_session__", sessionToken);
   } else {
     const sessionCookieName = options.sessionCookieName || "__session";
-    headers.set("Cookie", `${sessionCookieName}=${encodeURIComponent(sessionToken)}`);
+    headers.set("Cookie", `${sessionCookieName}=${sessionToken}`);
   }
 
   const response = await fetch(endpoint.toString(), {
@@ -500,33 +690,58 @@ export async function exchangeSessionForAuthToken(
   };
 }
 
+async function verifyAuthTokenDetailed(
+  token: string,
+  options: WachtServerOptions = {},
+): Promise<{
+  payload: JWTPayload | null;
+  reason: VerifyAuthTokenReason | null;
+  detail: string | null;
+  verifier: string | null;
+  tokenIssuer: string | null;
+  expectedIssuer: string | null;
+  tokenAlgorithm: string | null;
+  frontendApiUrl: string | null;
+}> {
+  const frontendApiUrl = getFrontendApiUrl(options);
+  const header = decodeJwtHeader(token);
+  const rawPayload = decodeJwtPayload(token);
+  const tokenIssuer = rawPayload?.iss || null;
+  const expectedIssuer = options.requiredIssuer || frontendApiUrl;
+  const tokenAlgorithm = header?.alg || null;
+
+  const signature = await verifyJwtSignature(token, frontendApiUrl, options);
+  if (!signature.payload) {
+    return {
+      payload: null,
+      reason: signature.reason || "invalid_signature",
+      detail: signature.detail,
+      verifier: signature.verifier,
+      tokenIssuer,
+      expectedIssuer,
+      tokenAlgorithm,
+      frontendApiUrl,
+    };
+  }
+
+  return {
+    payload: signature.payload,
+    reason: null,
+    detail: signature.detail,
+    verifier: signature.verifier,
+    tokenIssuer,
+    expectedIssuer,
+    tokenAlgorithm,
+    frontendApiUrl,
+  };
+}
+
 export async function verifyAuthToken(
   token: string,
   options: WachtServerOptions = {},
 ): Promise<JWTPayload | null> {
-  const frontendApiUrl = getFrontendApiUrl(options);
-
-  const publicKeyPem = await fetchPublicKeyPem(frontendApiUrl);
-  if (!publicKeyPem) {
-    return null;
-  }
-
-  const payload = await verifyJwtSignature(token, publicKeyPem);
-  if (!payload) {
-    return null;
-  }
-
-  const timeValid = hasValidTimeClaims(payload, options);
-  if (!timeValid) {
-    return null;
-  }
-
-  const issuerValid = hasValidIssuerClaim(payload, frontendApiUrl, options);
-  if (!issuerValid) {
-    return null;
-  }
-
-  return payload;
+  const result = await verifyAuthTokenDetailed(token, options);
+  return result.payload;
 }
 
 export async function getAuthFromToken(
