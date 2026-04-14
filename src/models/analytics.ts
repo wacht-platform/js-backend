@@ -9,6 +9,16 @@ export interface AnalyticsStats {
   new_users_today: number;
   new_users_this_week: number;
   new_users_this_month: number;
+  daily_metrics?: DailyAuthMetric[];
+}
+
+/**
+ * Day-wise auth activity
+ */
+export interface DailyAuthMetric {
+  day: string;
+  signins: number;
+  signups: number;
 }
 
 /**

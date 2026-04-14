@@ -73,8 +73,8 @@ export class WachtAuthError extends Error {
 
 export interface JWTPayload {
   sub?: string;
-  session_id?: string;
   sid?: string;
+  sess?: string;
   organization?: string;
   organization_permissions?: string[];
   workspace?: string;
@@ -83,9 +83,14 @@ export interface JWTPayload {
     organization?: string[];
     workspace?: string[];
   };
+  claims?: Record<string, unknown>;
+  metadata?: Record<string, unknown>;
+  custom_claims?: Record<string, unknown>;
   exp?: number;
   nbf?: number;
+  iat?: number;
   iss?: string;
+  aud?: string | string[];
 }
 
 interface JWTHeader {
@@ -110,19 +115,28 @@ function decodeBase64(input: string): string {
 
 function decodeBase64Url(input: string): string {
   const normalized = input.replace(/-/g, "+").replace(/_/g, "/");
-  const padded = normalized.padEnd(normalized.length + ((4 - (normalized.length % 4)) % 4), "=");
+  const padded = normalized.padEnd(
+    normalized.length + ((4 - (normalized.length % 4)) % 4),
+    "=",
+  );
   return decodeBase64(padded);
 }
 
 function decodeBase64UrlToBytes(input: string): Uint8Array {
   const normalized = input.replace(/-/g, "+").replace(/_/g, "/");
-  const padded = normalized.padEnd(normalized.length + ((4 - (normalized.length % 4)) % 4), "=");
+  const padded = normalized.padEnd(
+    normalized.length + ((4 - (normalized.length % 4)) % 4),
+    "=",
+  );
   const raw = decodeBase64(padded);
   return Uint8Array.from(raw, (char) => char.charCodeAt(0));
 }
 
 function toArrayBuffer(bytes: Uint8Array): ArrayBuffer {
-  return bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
+  return bytes.buffer.slice(
+    bytes.byteOffset,
+    bytes.byteOffset + bytes.byteLength,
+  ) as ArrayBuffer;
 }
 
 function decodeJwtPayload(token: string): JWTPayload | null {
@@ -153,7 +167,7 @@ function getTokenFromAuthorizationHeader(request: Request): string | null {
   return authHeader.substring(7).trim();
 }
 
-function getFrontendApiUrl(_request: Request, options: WachtServerOptions): string {
+function getFrontendApiUrl(options: WachtServerOptions): string {
   const parsedFromPublishableKey = parseFrontendApiUrlFromPublishableKey(
     options.publishableKey || readPublishableKeyFromEnv(),
   );
@@ -162,13 +176,16 @@ function getFrontendApiUrl(_request: Request, options: WachtServerOptions): stri
   }
 
   throw new Error(
-    "Unable to derive frontend API URL from publishable key. Set WACHT_PUBLISHABLE_KEY or NEXT_PUBLIC_WACHT_PUBLISHABLE_KEY."
+    "Unable to derive frontend API URL from publishable key. Set WACHT_PUBLISHABLE_KEY or NEXT_PUBLIC_WACHT_PUBLISHABLE_KEY.",
   );
 }
 
 function readPublishableKeyFromEnv(): string | undefined {
   if (typeof process === "undefined" || !process.env) return undefined;
-  return process.env.NEXT_PUBLIC_WACHT_PUBLISHABLE_KEY || process.env.WACHT_PUBLISHABLE_KEY;
+  return (
+    process.env.NEXT_PUBLIC_WACHT_PUBLISHABLE_KEY ||
+    process.env.WACHT_PUBLISHABLE_KEY
+  );
 }
 
 export function parseFrontendApiUrlFromPublishableKey(
@@ -270,7 +287,9 @@ async function verifyJwtSignature(
   }
 }
 
-async function fetchPublicKeyPem(frontendApiUrl: string): Promise<string | null> {
+async function fetchPublicKeyPem(
+  frontendApiUrl: string,
+): Promise<string | null> {
   const cached = publicKeyCache.get(frontendApiUrl);
   if (cached && cached.expiresAt > Date.now()) {
     return cached.value;
@@ -295,14 +314,17 @@ async function fetchPublicKeyPem(frontendApiUrl: string): Promise<string | null>
   return publicKey;
 }
 
-function hasValidTimeClaims(payload: JWTPayload, options: WachtServerOptions): boolean {
+function hasValidTimeClaims(
+  payload: JWTPayload,
+  options: WachtServerOptions,
+): boolean {
   const now = Math.floor(Date.now() / 1000);
   const skewSeconds = Math.floor((options.clockSkewInMs || 0) / 1000);
 
-  if (payload.exp && payload.exp < now-skewSeconds) {
+  if (payload.exp && payload.exp < now - skewSeconds) {
     return false;
   }
-  if (payload.nbf && payload.nbf > now+skewSeconds) {
+  if (payload.nbf && payload.nbf > now + skewSeconds) {
     return false;
   }
   return true;
@@ -323,12 +345,16 @@ function createAuth(
   payload: JWTPayload | null,
   options: WachtServerOptions,
 ): WachtAuth {
-  const organizationPermissions = payload?.organization_permissions || payload?.permissions?.organization || [];
-  const workspacePermissions = payload?.workspace_permissions || payload?.permissions?.workspace || [];
+  const organizationPermissions =
+    payload?.organization_permissions ||
+    payload?.permissions?.organization ||
+    [];
+  const workspacePermissions =
+    payload?.workspace_permissions || payload?.permissions?.workspace || [];
 
   return {
     userId: payload?.sub || null,
-    sessionId: payload?.session_id || payload?.sid || null,
+    sessionId: payload?.sid || payload?.sess || null,
     organizationId: payload?.organization || null,
     workspaceId: payload?.workspace || null,
     organizationPermissions,
@@ -339,15 +365,23 @@ function createAuth(
           "unauthenticated",
           401,
           "Unauthorized",
-          protectOptions?.redirectUrl ? { redirectUrl: protectOptions.redirectUrl } : undefined,
+          protectOptions?.redirectUrl
+            ? { redirectUrl: protectOptions.redirectUrl }
+            : undefined,
         );
       }
 
-      if (protectOptions?.organizationId && payload.organization !== protectOptions.organizationId) {
+      if (
+        protectOptions?.organizationId &&
+        payload.organization !== protectOptions.organizationId
+      ) {
         throw new WachtAuthError("forbidden", 403, "Forbidden");
       }
 
-      if (protectOptions?.workspaceId && payload.workspace !== protectOptions.workspaceId) {
+      if (
+        protectOptions?.workspaceId &&
+        payload.workspace !== protectOptions.workspaceId
+      ) {
         throw new WachtAuthError("forbidden", 403, "Forbidden");
       }
 
@@ -369,11 +403,15 @@ function createAuth(
     },
     has: (check: PermissionCheck) => {
       if (!payload?.sub) return false;
-      if (check.organizationId && payload.organization !== check.organizationId) return false;
-      if (check.workspaceId && payload.workspace !== check.workspaceId) return false;
+      if (check.organizationId && payload.organization !== check.organizationId)
+        return false;
+      if (check.workspaceId && payload.workspace !== check.workspaceId)
+        return false;
       if (!check.permission) return true;
 
-      const required = Array.isArray(check.permission) ? check.permission : [check.permission];
+      const required = Array.isArray(check.permission)
+        ? check.permission
+        : [check.permission];
       return required.some((permission) => {
         if (organizationPermissions.includes(permission)) return true;
         if (workspacePermissions.includes(permission)) return true;
@@ -384,7 +422,10 @@ function createAuth(
 }
 
 export function toSessionPrincipalIdentity(
-  auth: Pick<WachtAuth, "userId" | "sessionId" | "organizationId" | "workspaceId">,
+  auth: Pick<
+    WachtAuth,
+    "userId" | "sessionId" | "organizationId" | "workspaceId"
+  >,
 ): SessionPrincipalIdentity | null {
   if (!auth.userId) return null;
   return {
@@ -397,7 +438,10 @@ export function toSessionPrincipalIdentity(
 }
 
 export function toSessionPrincipalMetadata(
-  auth: Pick<WachtAuth, "userId" | "organizationPermissions" | "workspacePermissions">,
+  auth: Pick<
+    WachtAuth,
+    "userId" | "organizationPermissions" | "workspacePermissions"
+  >,
 ): SessionPrincipalMetadata | null {
   if (!auth.userId) return null;
   const permissionsChecked = Array.from(
@@ -414,11 +458,53 @@ export function toSessionPrincipalMetadata(
   };
 }
 
+export async function exchangeSessionForAuthToken(
+  sessionToken: string,
+  options: WachtServerOptions = {},
+  isDevSession = false,
+): Promise<{
+  authToken: string | null;
+  nextDevSession: string | null;
+  upstreamSessionSetCookie: string | null;
+}> {
+  const frontendApiUrl = getFrontendApiUrl(options);
+  const endpoint = new URL(`${frontendApiUrl}/session/token`);
+  const headers = new Headers({ Accept: "application/json" });
+
+  if (isDevSession) {
+    endpoint.searchParams.set("__dev_session__", sessionToken);
+  } else {
+    const sessionCookieName = options.sessionCookieName || "__session";
+    headers.set("Cookie", `${sessionCookieName}=${encodeURIComponent(sessionToken)}`);
+  }
+
+  const response = await fetch(endpoint.toString(), {
+    method: "GET",
+    headers,
+    credentials: "omit",
+  });
+
+  if (!response.ok) {
+    return {
+      authToken: null,
+      nextDevSession: null,
+      upstreamSessionSetCookie: response.headers.get("set-cookie"),
+    };
+  }
+
+  const json = (await response.json()) as { data?: { token?: string } };
+  return {
+    authToken: json?.data?.token || null,
+    nextDevSession: response.headers.get("x-development-session"),
+    upstreamSessionSetCookie: response.headers.get("set-cookie"),
+  };
+}
+
 export async function verifyAuthToken(
   token: string,
   options: WachtServerOptions = {},
 ): Promise<JWTPayload | null> {
-  const frontendApiUrl = getFrontendApiUrl(new Request("https://wacht.invalid"), options);
+  const frontendApiUrl = getFrontendApiUrl(options);
 
   const publicKeyPem = await fetchPublicKeyPem(frontendApiUrl);
   if (!publicKeyPem) {
@@ -452,25 +538,13 @@ export async function getAuthFromToken(
   return createAuth(payload, options);
 }
 
-export async function requireAuthFromToken(
-  token: string | null | undefined,
+export async function getAuth(
+  request: Request,
   options: WachtServerOptions = {},
 ): Promise<WachtAuth> {
-  const auth = await getAuthFromToken(token, options);
-  await auth.protect();
-  return auth;
-}
-
-export async function getAuth(request: Request, options: WachtServerOptions = {}): Promise<WachtAuth> {
   const token = getTokenFromAuthorizationHeader(request);
   const payload = token ? await verifyAuthToken(token, options) : null;
   return createAuth(payload, options);
-}
-
-export async function requireAuth(request: Request, options: WachtServerOptions = {}): Promise<WachtAuth> {
-  const authState = await getAuth(request, options);
-  await authState.protect();
-  return authState;
 }
 
 export async function authenticateRequest(
@@ -520,8 +594,13 @@ export function authFromHeaders(headers: Headers): WachtAuth {
     },
     has: (check: PermissionCheck) => {
       if (!authData.userId) return false;
-      if (check.organizationId && authData.organizationId !== check.organizationId) return false;
-      if (check.workspaceId && authData.workspaceId !== check.workspaceId) return false;
+      if (
+        check.organizationId &&
+        authData.organizationId !== check.organizationId
+      )
+        return false;
+      if (check.workspaceId && authData.workspaceId !== check.workspaceId)
+        return false;
       if (!check.permission) return true;
 
       const requiredPermissions = Array.isArray(check.permission)

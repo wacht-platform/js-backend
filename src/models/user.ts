@@ -199,8 +199,8 @@ export interface CreateSessionTicketRequest {
   user_id?: string;
   agent_ids?: string[];
   agent_session_identifier?: 'static' | 'signin';
+  actor_id?: string;
   webhook_app_slug?: string;
   api_auth_app_slug?: string;
-  context_group?: string;
   expires_in?: number;
 }
