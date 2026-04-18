@@ -2,10 +2,10 @@ import {
   getClient,
   type WachtClient,
   type PaginatedResponse,
-  type ListOptions,
 } from "../client";
 import type {
   User,
+  UserDetails,
   CreateUserRequest,
   UpdateUserRequest,
   UpdatePasswordRequest,
@@ -16,20 +16,27 @@ import type {
   AddPhoneRequest,
   UpdatePhoneRequest,
   UserSocialConnection,
+  ListUsersOptions,
 } from "../models";
 
 /**
  * List users
  */
 export async function listUsers(
-  options?: ListOptions,
+  options?: ListUsersOptions,
   client?: WachtClient,
 ): Promise<PaginatedResponse<User>> {
   const sdkClient = client ?? getClient();
-  const params = options
-    ? `?limit=${options.limit || 50}&offset=${options.offset || 0}`
-    : "";
-  return sdkClient.get<PaginatedResponse<User>>(`/users${params}`);
+  const params = new URLSearchParams();
+  if (options?.limit !== undefined) params.append("limit", String(options.limit));
+  if (options?.offset !== undefined) params.append("offset", String(options.offset));
+  if (options?.sort_key) params.append("sort_key", options.sort_key);
+  if (options?.sort_order) params.append("sort_order", options.sort_order);
+  if (options?.search) params.append("search", options.search);
+  const queryString = params.toString();
+  return sdkClient.get<PaginatedResponse<User>>(
+    `/users${queryString ? `?${queryString}` : ""}`,
+  );
 }
 
 /**
@@ -38,20 +45,9 @@ export async function listUsers(
 export async function getUser(
   userId: string,
   client?: WachtClient,
-): Promise<User> {
+): Promise<UserDetails> {
   const sdkClient = client ?? getClient();
-  return sdkClient.get<User>(`/users/${userId}`);
-}
-
-/**
- * Get a user by email
- */
-export async function getUserByEmail(
-  email: string,
-  client?: WachtClient,
-): Promise<User> {
-  const sdkClient = client ?? getClient();
-  return sdkClient.get<User>(`/users/by-email/${encodeURIComponent(email)}`);
+  return sdkClient.get<UserDetails>(`/users/${userId}/details`);
 }
 
 /**
@@ -62,7 +58,34 @@ export async function createUser(
   client?: WachtClient,
 ): Promise<User> {
   const sdkClient = client ?? getClient();
-  return sdkClient.post<User>("/users", request);
+  const formData = new FormData();
+
+  formData.append("first_name", request.first_name);
+  formData.append("last_name", request.last_name);
+
+  if (request.email_address !== undefined) {
+    formData.append("email_address", request.email_address);
+  }
+  if (request.phone_number !== undefined) {
+    formData.append("phone_number", request.phone_number);
+  }
+  if (request.username !== undefined) {
+    formData.append("username", request.username);
+  }
+  if (request.password !== undefined) {
+    formData.append("password", request.password);
+  }
+  if (request.skip_password_check !== undefined) {
+    formData.append(
+      "skip_password_check",
+      request.skip_password_check ? "true" : "false",
+    );
+  }
+  if (request.profile_image) {
+    formData.append("profile_image", request.profile_image);
+  }
+
+  return sdkClient.post<User>("/users", formData);
 }
 
 /**
@@ -72,9 +95,39 @@ export async function updateUser(
   userId: string,
   request: UpdateUserRequest,
   client?: WachtClient,
-): Promise<User> {
+): Promise<UserDetails> {
   const sdkClient = client ?? getClient();
-  return sdkClient.patch<User>(`/users/${userId}`, request);
+  const formData = new FormData();
+
+  if (request.first_name !== undefined) {
+    formData.append("first_name", request.first_name);
+  }
+  if (request.last_name !== undefined) {
+    formData.append("last_name", request.last_name);
+  }
+  if (request.username !== undefined) {
+    formData.append("username", request.username);
+  }
+  if (request.public_metadata !== undefined) {
+    formData.append("public_metadata", JSON.stringify(request.public_metadata));
+  }
+  if (request.private_metadata !== undefined) {
+    formData.append("private_metadata", JSON.stringify(request.private_metadata));
+  }
+  if (request.disabled !== undefined) {
+    formData.append("disabled", request.disabled ? "true" : "false");
+  }
+  if (request.remove_profile_image !== undefined) {
+    formData.append(
+      "remove_profile_image",
+      request.remove_profile_image ? "true" : "false",
+    );
+  }
+  if (request.profile_image) {
+    formData.append("profile_image", request.profile_image);
+  }
+
+  return sdkClient.patch<UserDetails>(`/users/${userId}`, formData);
 }
 
 /**
@@ -97,18 +150,7 @@ export async function updatePassword(
   client?: WachtClient,
 ): Promise<void> {
   const sdkClient = client ?? getClient();
-  return sdkClient.post<void>(`/users/${userId}/password`, request);
-}
-
-/**
- * List user emails
- */
-export async function listEmails(
-  userId: string,
-  client?: WachtClient,
-): Promise<UserEmail[]> {
-  const sdkClient = client ?? getClient();
-  return sdkClient.get<UserEmail[]>(`/users/${userId}/emails`);
+  return sdkClient.patch<void>(`/users/${userId}/password`, request);
 }
 
 /**
@@ -149,17 +191,6 @@ export async function deleteEmail(
 ): Promise<void> {
   const sdkClient = client ?? getClient();
   return sdkClient.delete<void>(`/users/${userId}/emails/${emailId}`);
-}
-
-/**
- * List user phone numbers
- */
-export async function listPhones(
-  userId: string,
-  client?: WachtClient,
-): Promise<UserPhone[]> {
-  const sdkClient = client ?? getClient();
-  return sdkClient.get<UserPhone[]>(`/users/${userId}/phones`);
 }
 
 /**

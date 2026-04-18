@@ -12,7 +12,7 @@ export interface Notification {
   ctas?: CallToAction[];
   severity?: NotificationSeverity;
   metadata?: Record<string, unknown>;
-  expires_in_hours?: number;
+  expires_hours?: number;
   created_at: string;
   updated_at: string;
 }
@@ -45,10 +45,10 @@ export interface CreateNotificationRequest {
   title: string;
   body: string;
   ctas?: CallToAction[];
-  severity?: string;
+  severity?: NotificationSeverity;
   metadata?: Record<string, unknown>;
   /** Expiration time in hours */
-  expires_in_hours?: number;
+  expires_hours?: number;
 }
 
 /**

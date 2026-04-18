@@ -21,10 +21,5 @@ export async function uploadImage(
   return sdkClient.post<{ url: string }>(
     `/settings/upload/${imageType}`,
     formData,
-    {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    },
   );
 }

@@ -69,6 +69,15 @@ import type {
   CountryRestrictions,
   MultiSessionSupport,
 } from "./models/deployment-restrictions";
+import type {
+  DeploymentMode,
+  EmailProvider,
+  DnsRecord,
+  DomainVerificationRecords,
+  EmailVerificationRecords,
+  CustomSmtpConfig,
+  DeploymentWithSettings,
+} from "./models/deployment";
 import type { DeploymentB2bSettingsUpdates } from "./models/b2b-settings";
 import type {
   JwtTemplate,
@@ -78,6 +87,7 @@ import type {
 } from "./models/jwt-template";
 import type {
   User,
+  UserDetails,
   CreateUserRequest,
   UpdateUserRequest,
   UpdatePasswordRequest,
@@ -102,6 +112,11 @@ import type {
 } from "./models/user";
 import type {
   Organization,
+  OrganizationDetails,
+  ListOrganizationsOptions,
+  OrganizationListSortOrder,
+  ListOrganizationMembersOptions,
+  OrganizationMemberListSortOrder,
   CreateOrganizationRequest,
   UpdateOrganizationRequest,
 } from "./models/organization";
@@ -117,6 +132,12 @@ import type {
 } from "./models/organization";
 import type {
   Workspace,
+  WorkspaceListItem,
+  WorkspaceDetails,
+  ListWorkspacesOptions,
+  WorkspaceListSortOrder,
+  ListWorkspaceMembersOptions,
+  WorkspaceMemberListSortOrder,
   CreateWorkspaceRequest,
   UpdateWorkspaceRequest,
 } from "./models/workspace";
@@ -209,11 +230,28 @@ import type {
   ApiAuthApp,
   CreateApiAuthAppRequest,
   UpdateApiAuthAppRequest,
+  RateLimitScheme,
+  CreateRateLimitSchemeRequest,
+  UpdateRateLimitSchemeRequest,
+  ApiAuditLog,
+  ApiAuditLogsResponse,
+  ApiAuditTopKey,
+  ApiAuditTopPath,
+  ApiAuditBlockedReason,
+  ApiAuditRateLimitRule,
+  ApiAuditRateLimitBreakdown,
+  ApiAuditAnalyticsResponse,
+  ApiAuditTimeseriesPoint,
+  ApiAuditTimeseriesResponse,
+  ListApiAuditLogsOptions,
+  GetApiAuditAnalyticsOptions,
+  GetApiAuditTimeseriesOptions,
 } from "./models/api-key";
 import type {
   ApiKey,
   ApiKeyWithSecret,
   CreateApiKeyRequest,
+  RevokeApiKeyOptions,
   RevokeApiKeyRequest,
   RotateApiKeyRequest,
 } from "./models/api-key";
@@ -249,28 +287,41 @@ import type {
 } from "./models/oauth";
 import type {
   WebhookApp,
+  WebhookEventCatalog,
+  WebhookEventDefinition,
   CreateWebhookAppRequest,
   UpdateWebhookAppRequest,
+  CreateWebhookEventCatalogRequest,
+  UpdateWebhookEventCatalogRequest,
+  AppendWebhookEventCatalogEventsRequest,
+  ArchiveWebhookEventInCatalogRequest,
   TriggerWebhookRequest,
   WebhookEndpoint,
   WebhookDelivery,
   WebhookAppEvent,
   WebhookDeliveryDetails,
+  WebhookStats,
   WebhookTimeseriesData,
+  WebhookTimeseriesResult,
   CreateWebhookEndpointRequest,
   UpdateWebhookEndpointRequest,
   WebhookAnalytics,
+  ReplayTaskStatus,
+  ReplayTaskListResponse,
+  ReplayTaskCancelResponse,
 } from "./models/webhook";
 import type {
   Segment,
+  ListSegmentsOptions,
   CreateSegmentRequest,
   UpdateSegmentRequest,
-  SegmentFilter,
-  SegmentEvaluationResult,
+  SegmentDataRequest,
+  AnalyzedEntity,
 } from "./models/segment";
 import type {
   EmailTemplate,
   SocialConnection,
+  UpsertSocialConnectionRequest,
   SmtpConfigRequest,
   SmtpConfigResponse,
   SmtpVerifyResponse,
@@ -278,7 +329,6 @@ import type {
 import type {
   AnalyticsStats,
   RecentSignup,
-  RecentSignupOrganization,
 } from "./models/analytics";
 
 // API modules - namespace exports
@@ -350,6 +400,15 @@ export type {
   CountryRestrictions,
   MultiSessionSupport,
 };
+export type {
+  DeploymentMode,
+  EmailProvider,
+  DnsRecord,
+  DomainVerificationRecords,
+  EmailVerificationRecords,
+  CustomSmtpConfig,
+  DeploymentWithSettings,
+};
 export type { DeploymentB2bSettingsUpdates };
 export type {
   JwtTemplate,
@@ -359,6 +418,7 @@ export type {
 };
 export type {
   User,
+  UserDetails,
   CreateUserRequest,
   UpdateUserRequest,
   UpdatePasswordRequest,
@@ -367,6 +427,11 @@ export type { UserEmail, AddEmailRequest, UpdateEmailRequest };
 export type { UserPhone, AddPhoneRequest, UpdatePhoneRequest };
 export type {
   Organization,
+  OrganizationDetails,
+  ListOrganizationsOptions,
+  OrganizationListSortOrder,
+  ListOrganizationMembersOptions,
+  OrganizationMemberListSortOrder,
   CreateOrganizationRequest,
   UpdateOrganizationRequest,
 };
@@ -380,7 +445,17 @@ export type {
   CreateOrganizationRoleRequest,
   UpdateOrganizationRoleRequest,
 };
-export type { Workspace, CreateWorkspaceRequest, UpdateWorkspaceRequest };
+export type {
+  Workspace,
+  WorkspaceListItem,
+  WorkspaceDetails,
+  ListWorkspacesOptions,
+  WorkspaceListSortOrder,
+  ListWorkspaceMembersOptions,
+  WorkspaceMemberListSortOrder,
+  CreateWorkspaceRequest,
+  UpdateWorkspaceRequest,
+};
 export type {
   WorkspaceMember,
   AddWorkspaceMemberRequest,
@@ -468,11 +543,32 @@ export type {
   NotificationSeverity,
   NotificationStats,
 };
-export type { ApiAuthApp, CreateApiAuthAppRequest, UpdateApiAuthAppRequest };
+export type {
+  ApiAuthApp,
+  CreateApiAuthAppRequest,
+  UpdateApiAuthAppRequest,
+  RateLimitScheme,
+  CreateRateLimitSchemeRequest,
+  UpdateRateLimitSchemeRequest,
+  ApiAuditLog,
+  ApiAuditLogsResponse,
+  ApiAuditTopKey,
+  ApiAuditTopPath,
+  ApiAuditBlockedReason,
+  ApiAuditRateLimitRule,
+  ApiAuditRateLimitBreakdown,
+  ApiAuditAnalyticsResponse,
+  ApiAuditTimeseriesPoint,
+  ApiAuditTimeseriesResponse,
+  ListApiAuditLogsOptions,
+  GetApiAuditAnalyticsOptions,
+  GetApiAuditTimeseriesOptions,
+};
 export type {
   ApiKey,
   ApiKeyWithSecret,
   CreateApiKeyRequest,
+  RevokeApiKeyOptions,
   RevokeApiKeyRequest,
   RotateApiKeyRequest,
 };
@@ -508,8 +604,14 @@ export type {
 };
 export type {
   WebhookApp,
+  WebhookEventCatalog,
+  WebhookEventDefinition,
   CreateWebhookAppRequest,
   UpdateWebhookAppRequest,
+  CreateWebhookEventCatalogRequest,
+  UpdateWebhookEventCatalogRequest,
+  AppendWebhookEventCatalogEventsRequest,
+  ArchiveWebhookEventInCatalogRequest,
   TriggerWebhookRequest,
 };
 export type {
@@ -517,17 +619,23 @@ export type {
   WebhookDelivery,
   WebhookAppEvent,
   WebhookDeliveryDetails,
+  WebhookStats,
   WebhookTimeseriesData,
+  WebhookTimeseriesResult,
   CreateWebhookEndpointRequest,
   UpdateWebhookEndpointRequest,
   WebhookAnalytics,
+  ReplayTaskStatus,
+  ReplayTaskListResponse,
+  ReplayTaskCancelResponse,
 };
 export type {
   Segment,
+  ListSegmentsOptions,
   CreateSegmentRequest,
   UpdateSegmentRequest,
-  SegmentFilter,
-  SegmentEvaluationResult,
+  SegmentDataRequest,
+  AnalyzedEntity,
 };
 export type {
   DeploymentInvitation,
@@ -540,11 +648,12 @@ export type {
 export type {
   EmailTemplate,
   SocialConnection,
+  UpsertSocialConnectionRequest,
   SmtpConfigRequest,
   SmtpConfigResponse,
   SmtpVerifyResponse,
 };
-export type { AnalyticsStats, RecentSignup, RecentSignupOrganization };
+export type { AnalyticsStats, RecentSignup };
 
 // API module namespace exports
 export {

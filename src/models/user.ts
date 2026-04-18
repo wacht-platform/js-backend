@@ -1,3 +1,5 @@
+import type { Segment } from "./segment";
+
 /**
  * User model
  * Generated from OpenAPI spec - matches backend API exactly
@@ -14,6 +16,22 @@ export interface User {
   primary_phone_number?: string;
 }
 
+export type ActiveUserListSortKey =
+  | "created_at"
+  | "username"
+  | "email"
+  | "phone_number";
+
+export type ActiveUserListSortOrder = "asc" | "desc";
+
+export interface ListUsersOptions {
+  limit?: number;
+  offset?: number;
+  sort_key?: ActiveUserListSortKey;
+  sort_order?: ActiveUserListSortOrder;
+  search?: string;
+}
+
 /**
  * Request to create a user
  */
@@ -26,7 +44,8 @@ export interface CreateUserRequest {
   password?: string;
   /** Skip password validation check (defaults to false) */
   skip_password_check?: boolean;
-  /** Note: profile_image is multipart/form-data only */
+  /** Optional profile image uploaded as multipart/form-data */
+  profile_image?: File | Blob;
 }
 
 /**
@@ -39,7 +58,40 @@ export interface UpdateUserRequest {
   public_metadata?: Record<string, unknown>;
   private_metadata?: Record<string, unknown>;
   disabled?: boolean;
-  /** Note: profile_image is multipart/form-data only */
+  /** Remove the stored profile image when true */
+  remove_profile_image?: boolean;
+  /** Optional profile image uploaded as multipart/form-data */
+  profile_image?: File | Blob;
+}
+
+export interface UserDetails {
+  id: string;
+  created_at: string;
+  updated_at: string;
+  first_name: string;
+  last_name: string;
+  username?: string;
+  profile_picture_url: string;
+  schema_version: string;
+  disabled: boolean;
+  second_factor_policy: string;
+  availability: string;
+  last_password_reset_at?: string;
+  active_organization_membership_id?: string;
+  active_workspace_membership_id?: string;
+  deployment_id: string;
+  public_metadata: Record<string, unknown>;
+  private_metadata: Record<string, unknown>;
+  primary_email_address_id?: string;
+  primary_email_address?: string;
+  primary_phone_number_id?: string;
+  primary_phone_number?: string;
+  email_addresses: UserEmail[];
+  phone_numbers: UserPhone[];
+  social_connections: UserSocialConnection[];
+  segments: Segment[];
+  has_password: boolean;
+  has_backup_codes: boolean;
 }
 
 /**
@@ -85,7 +137,8 @@ export type VerificationStrategy =
  */
 export interface AddEmailRequest {
   email: string;
-  verification_strategy?: VerificationStrategy;
+  verified?: boolean;
+  is_primary?: boolean;
 }
 
 /**
@@ -93,6 +146,7 @@ export interface AddEmailRequest {
  */
 export interface UpdateEmailRequest {
   email?: string;
+  verified?: boolean;
   is_primary?: boolean;
 }
 
@@ -117,6 +171,8 @@ export interface UserPhone {
 export interface AddPhoneRequest {
   phone_number: string;
   country_code: string;
+  verified?: boolean;
+  is_primary?: boolean;
 }
 
 /**
@@ -151,6 +207,7 @@ export interface InviteUserRequest {
   first_name: string;
   last_name: string;
   email_address: string;
+  expiry_days?: number;
 }
 
 /**

@@ -1,5 +1,6 @@
-import { getClient, type WachtClient } from "../client";
+import { getClient, type WachtClient, type PaginatedResponse } from "../client";
 import type {
+  DeploymentWithSettings,
   DeploymentRestrictionsUpdates,
   DeploymentB2bSettingsUpdates,
   CreateJwtTemplateRequest,
@@ -7,10 +8,23 @@ import type {
   JwtTemplate,
   EmailTemplate,
   SocialConnection,
+  UpsertSocialConnectionRequest,
   SmtpConfigRequest,
   SmtpConfigResponse,
   SmtpVerifyResponse,
+  DeploymentAuthSettingsUpdates,
+  DeploymentDisplaySettingsUpdates,
 } from "../models";
+
+/**
+ * Get current deployment with effective settings.
+ */
+export async function getDeploymentSettings(
+  client?: WachtClient,
+): Promise<DeploymentWithSettings> {
+  const sdkClient = client ?? getClient();
+  return sdkClient.get<DeploymentWithSettings>("/");
+}
 
 /**
  * Update deployment restrictions
@@ -39,20 +53,9 @@ export async function updateB2BSettings(
  */
 export async function listJwtTemplates(
   client?: WachtClient,
-): Promise<JwtTemplate[]> {
+): Promise<PaginatedResponse<JwtTemplate>> {
   const sdkClient = client ?? getClient();
-  return sdkClient.get<JwtTemplate[]>("/jwt-templates");
-}
-
-/**
- * Get a JWT template
- */
-export async function getJwtTemplate(
-  templateId: string,
-  client?: WachtClient,
-): Promise<JwtTemplate> {
-  const sdkClient = client ?? getClient();
-  return sdkClient.get<JwtTemplate>(`/jwt-templates/${templateId}`);
+  return sdkClient.get<PaginatedResponse<JwtTemplate>>("/jwt-templates");
 }
 
 /**
@@ -109,9 +112,9 @@ export async function updateEmailTemplate(
   templateName: string,
   template: EmailTemplate,
   client?: WachtClient,
-): Promise<void> {
+): Promise<EmailTemplate> {
   const sdkClient = client ?? getClient();
-  return sdkClient.patch<void>(
+  return sdkClient.patch<EmailTemplate>(
     `/settings/email-templates/${templateName}`,
     template,
   );
@@ -122,16 +125,16 @@ export async function updateEmailTemplate(
  */
 export async function getSocialConnections(
   client?: WachtClient,
-): Promise<SocialConnection[]> {
+): Promise<PaginatedResponse<SocialConnection>> {
   const sdkClient = client ?? getClient();
-  return sdkClient.get<SocialConnection[]>("/settings/social-connections");
+  return sdkClient.get<PaginatedResponse<SocialConnection>>("/settings/social-connections");
 }
 
 /**
  * Upsert a social connection
  */
 export async function upsertSocialConnection(
-  connection: SocialConnection,
+  connection: UpsertSocialConnectionRequest,
   client?: WachtClient,
 ): Promise<SocialConnection> {
   const sdkClient = client ?? getClient();
@@ -178,62 +181,20 @@ export async function verifySmtpConnection(
  * Update display settings
  */
 export async function updateDisplaySettings(
-  request: {
-    display_name?: string;
-    primary_color?: string;
-    logo_url?: string;
-    favicon_url?: string;
-    custom_css?: string;
-    theme?: "light" | "dark" | "auto";
-    locale?: string;
-    timezone?: string;
-  },
+  request: DeploymentDisplaySettingsUpdates,
   client?: WachtClient,
-): Promise<{
-  display_name?: string;
-  primary_color?: string;
-  logo_url?: string;
-  favicon_url?: string;
-  custom_css?: string;
-  theme?: string;
-}> {
+): Promise<void> {
   const sdkClient = client ?? getClient();
-  return sdkClient.patch<{
-    display_name?: string;
-    primary_color?: string;
-    logo_url?: string;
-    favicon_url?: string;
-    custom_css?: string;
-    theme?: string;
-  }>("/settings/display", request);
+  return sdkClient.patch<void>("/settings/display", request);
 }
 
 /**
  * Update auth settings
  */
 export async function updateAuthSettings(
-  request: {
-    allowed_domains?: string[];
-    password_min_length?: number;
-    password_require_uppercase?: boolean;
-    password_require_lowercase?: boolean;
-    password_require_numbers?: boolean;
-    password_require_special_chars?: boolean;
-    mfa_enabled?: boolean;
-    mfa_methods?: Array<"totp" | "sms" | "email">;
-    session_timeout?: number;
-    refresh_token_expiration?: number;
-  },
+  request: DeploymentAuthSettingsUpdates,
   client?: WachtClient,
-): Promise<{
-  allowed_domains?: string[];
-  password_min_length?: number;
-  mfa_enabled?: boolean;
-}> {
+): Promise<void> {
   const sdkClient = client ?? getClient();
-  return sdkClient.patch<{
-    allowed_domains?: string[];
-    password_min_length?: number;
-    mfa_enabled?: boolean;
-  }>("/settings/auth", request);
+  return sdkClient.patch<void>("/settings/auth", request);
 }

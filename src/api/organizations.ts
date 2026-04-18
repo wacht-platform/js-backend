@@ -2,10 +2,12 @@ import {
   getClient,
   type WachtClient,
   type PaginatedResponse,
-  type ListOptions,
 } from "../client";
 import type {
   Organization,
+  OrganizationDetails,
+  ListOrganizationsOptions,
+  ListOrganizationMembersOptions,
   CreateOrganizationRequest,
   UpdateOrganizationRequest,
   OrganizationMember,
@@ -22,15 +24,19 @@ import type {
  * List organizations
  */
 export async function listOrganizations(
-  options?: ListOptions,
+  options?: ListOrganizationsOptions,
   client?: WachtClient,
 ): Promise<PaginatedResponse<Organization>> {
   const sdkClient = client ?? getClient();
-  const params = options
-    ? `?limit=${options.limit || 50}&offset=${options.offset || 0}`
-    : "";
+  const params = new URLSearchParams();
+  if (options?.limit !== undefined) params.append("limit", String(options.limit));
+  if (options?.offset !== undefined) params.append("offset", String(options.offset));
+  if (options?.sort_key !== undefined) params.append("sort_key", options.sort_key);
+  if (options?.sort_order !== undefined) params.append("sort_order", options.sort_order);
+  if (options?.search !== undefined) params.append("search", options.search);
+  const queryString = params.toString();
   return sdkClient.get<PaginatedResponse<Organization>>(
-    `/organizations${params}`,
+    `/organizations${queryString ? `?${queryString}` : ""}`,
   );
 }
 
@@ -40,9 +46,9 @@ export async function listOrganizations(
 export async function getOrganization(
   organizationId: string,
   client?: WachtClient,
-): Promise<Organization> {
+): Promise<OrganizationDetails> {
   const sdkClient = client ?? getClient();
-  return sdkClient.get<Organization>(`/organizations/${organizationId}`);
+  return sdkClient.get<OrganizationDetails>(`/organizations/${organizationId}`);
 }
 
 /**
@@ -53,7 +59,22 @@ export async function createOrganization(
   client?: WachtClient,
 ): Promise<Organization> {
   const sdkClient = client ?? getClient();
-  return sdkClient.post<Organization>("/organizations", request);
+  const formData = new FormData();
+  formData.append("name", request.name);
+  if (request.description !== undefined) {
+    formData.append("description", request.description);
+  }
+  if (request.public_metadata !== undefined) {
+    formData.append("public_metadata", JSON.stringify(request.public_metadata));
+  }
+  if (request.private_metadata !== undefined) {
+    formData.append("private_metadata", JSON.stringify(request.private_metadata));
+  }
+  if (request.organization_image) {
+    formData.append("organization_image", request.organization_image);
+  }
+
+  return sdkClient.post<Organization>("/organizations", formData);
 }
 
 /**
@@ -65,9 +86,29 @@ export async function updateOrganization(
   client?: WachtClient,
 ): Promise<Organization> {
   const sdkClient = client ?? getClient();
+  const formData = new FormData();
+  if (request.name !== undefined) {
+    formData.append("name", request.name);
+  }
+  if (request.description !== undefined) {
+    formData.append("description", request.description);
+  }
+  if (request.public_metadata !== undefined) {
+    formData.append("public_metadata", JSON.stringify(request.public_metadata));
+  }
+  if (request.private_metadata !== undefined) {
+    formData.append("private_metadata", JSON.stringify(request.private_metadata));
+  }
+  if (request.remove_image !== undefined) {
+    formData.append("remove_image", request.remove_image ? "true" : "false");
+  }
+  if (request.organization_image) {
+    formData.append("organization_image", request.organization_image);
+  }
+
   return sdkClient.patch<Organization>(
     `/organizations/${organizationId}`,
-    request,
+    formData,
   );
 }
 
@@ -87,15 +128,19 @@ export async function deleteOrganization(
  */
 export async function listOrganizationMembers(
   organizationId: string,
-  options?: ListOptions,
+  options?: ListOrganizationMembersOptions,
   client?: WachtClient,
 ): Promise<PaginatedResponse<OrganizationMember>> {
   const sdkClient = client ?? getClient();
-  const params = options
-    ? `?limit=${options.limit || 50}&offset=${options.offset || 0}`
-    : "";
+  const params = new URLSearchParams();
+  if (options?.limit !== undefined) params.append("limit", String(options.limit));
+  if (options?.offset !== undefined) params.append("offset", String(options.offset));
+  if (options?.search !== undefined) params.append("search", options.search);
+  if (options?.sort_key !== undefined) params.append("sort_key", options.sort_key);
+  if (options?.sort_order !== undefined) params.append("sort_order", options.sort_order);
+  const queryString = params.toString();
   return sdkClient.get<PaginatedResponse<OrganizationMember>>(
-    `/organizations/${organizationId}/members${params}`,
+    `/organizations/${organizationId}/members${queryString ? `?${queryString}` : ""}`,
   );
 }
 
@@ -122,9 +167,9 @@ export async function updateOrganizationMember(
   memberId: string,
   request: UpdateOrganizationMemberRequest,
   client?: WachtClient,
-): Promise<OrganizationMember> {
+): Promise<void> {
   const sdkClient = client ?? getClient();
-  return sdkClient.patch<OrganizationMember>(
+  return sdkClient.patch<void>(
     `/organizations/${organizationId}/members/${memberId}`,
     request,
   );
@@ -149,15 +194,11 @@ export async function removeOrganizationMember(
  */
 export async function listOrganizationRoles(
   organizationId: string,
-  options?: ListOptions,
   client?: WachtClient,
 ): Promise<PaginatedResponse<OrganizationRole>> {
   const sdkClient = client ?? getClient();
-  const params = options
-    ? `?limit=${options.limit || 50}&offset=${options.offset || 0}`
-    : "";
   return sdkClient.get<PaginatedResponse<OrganizationRole>>(
-    `/organizations/${organizationId}/roles${params}`,
+    `/organizations/${organizationId}/roles`,
   );
 }
 
@@ -215,8 +256,23 @@ export async function createWorkspaceForOrganization(
   client?: WachtClient,
 ): Promise<Workspace> {
   const sdkClient = client ?? getClient();
+  const formData = new FormData();
+  formData.append("name", request.name);
+  if (request.description !== undefined) {
+    formData.append("description", request.description);
+  }
+  if (request.public_metadata !== undefined) {
+    formData.append("public_metadata", JSON.stringify(request.public_metadata));
+  }
+  if (request.private_metadata !== undefined) {
+    formData.append("private_metadata", JSON.stringify(request.private_metadata));
+  }
+  if (request.workspace_image) {
+    formData.append("workspace_image", request.workspace_image);
+  }
+
   return sdkClient.post<Workspace>(
     `/organizations/${organizationId}/workspaces`,
-    request,
+    formData,
   );
 }

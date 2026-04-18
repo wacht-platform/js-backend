@@ -88,6 +88,14 @@ export interface OAuthClient {
   client_auth_method: string;
   grant_types: string[];
   redirect_uris: string[];
+  client_name?: string;
+  client_uri?: string;
+  logo_uri?: string;
+  tos_uri?: string;
+  policy_uri?: string;
+  contacts?: string[];
+  software_id?: string;
+  software_version?: string;
   token_endpoint_auth_signing_alg?: string;
   jwks_uri?: string;
   jwks?: JwksDocument;
@@ -101,7 +109,15 @@ export interface OAuthClient {
 export interface CreateOAuthClientRequest {
   client_auth_method: string;
   grant_types: string[];
-  redirect_uris: string[];
+  redirect_uris?: string[];
+  client_name?: string;
+  client_uri?: string;
+  logo_uri?: string;
+  tos_uri?: string;
+  policy_uri?: string;
+  contacts?: string[];
+  software_id?: string;
+  software_version?: string;
   token_endpoint_auth_signing_alg?: string;
   jwks_uri?: string;
   jwks?: JwksDocument;
@@ -112,6 +128,14 @@ export interface UpdateOAuthClientRequest {
   client_auth_method?: string;
   grant_types?: string[];
   redirect_uris?: string[];
+  client_name?: string;
+  client_uri?: string;
+  logo_uri?: string;
+  tos_uri?: string;
+  policy_uri?: string;
+  contacts?: string[];
+  software_id?: string;
+  software_version?: string;
   token_endpoint_auth_signing_alg?: string;
   jwks_uri?: string;
   jwks?: JwksDocument;

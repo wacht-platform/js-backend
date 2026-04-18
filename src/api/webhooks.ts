@@ -6,20 +6,30 @@ import {
 } from "../client";
 import type {
   WebhookApp,
+  WebhookEventCatalog,
   CreateWebhookAppRequest,
   UpdateWebhookAppRequest,
+  CreateWebhookEventCatalogRequest,
+  UpdateWebhookEventCatalogRequest,
+  AppendWebhookEventCatalogEventsRequest,
+  ArchiveWebhookEventInCatalogRequest,
   TriggerWebhookRequest,
   TriggerWebhookResponse,
   WebhookAnalytics,
+  WebhookStats,
   WebhookEndpoint,
   WebhookDelivery,
   WebhookDeliveryDetails,
   WebhookAppEvent,
   WebhookTimeseriesData,
+  WebhookTimeseriesResult,
   CreateWebhookEndpointRequest,
   UpdateWebhookEndpointRequest,
   ReplayWebhookDeliveryRequest,
   ReplayWebhookDeliveryResponse,
+  ReplayTaskListResponse,
+  ReplayTaskStatus,
+  ReplayTaskCancelResponse,
   ReactivateWebhookEndpointResponse,
   TestWebhookEndpointRequest,
   TestWebhookEndpointResponse,
@@ -66,6 +76,91 @@ export async function getWebhookApp(
 ): Promise<WebhookApp> {
   const sdkClient = client ?? getClient();
   return sdkClient.get<WebhookApp>(`/webhooks/apps/${appSlug}`);
+}
+
+/**
+ * List webhook event catalogs.
+ */
+export async function listWebhookEventCatalogs(
+  options?: ListOptions,
+  client?: WachtClient,
+): Promise<PaginatedResponse<WebhookEventCatalog>> {
+  const sdkClient = client ?? getClient();
+  return sdkClient.get<PaginatedResponse<WebhookEventCatalog>>(
+    withQuery("/webhooks/event-catalogs", {
+      limit: options?.limit,
+      offset: options?.offset,
+    }),
+  );
+}
+
+/**
+ * Get a webhook event catalog by slug.
+ */
+export async function getWebhookEventCatalog(
+  slug: string,
+  client?: WachtClient,
+): Promise<WebhookEventCatalog> {
+  const sdkClient = client ?? getClient();
+  return sdkClient.get<WebhookEventCatalog>(
+    `/webhooks/event-catalogs/${encodeURIComponent(slug)}`,
+  );
+}
+
+/**
+ * Create a webhook event catalog.
+ */
+export async function createWebhookEventCatalog(
+  request: CreateWebhookEventCatalogRequest,
+  client?: WachtClient,
+): Promise<WebhookEventCatalog> {
+  const sdkClient = client ?? getClient();
+  return sdkClient.post<WebhookEventCatalog>("/webhooks/event-catalogs", request);
+}
+
+/**
+ * Update a webhook event catalog by slug.
+ */
+export async function updateWebhookEventCatalog(
+  slug: string,
+  request: UpdateWebhookEventCatalogRequest,
+  client?: WachtClient,
+): Promise<WebhookEventCatalog> {
+  const sdkClient = client ?? getClient();
+  return sdkClient.put<WebhookEventCatalog>(
+    `/webhooks/event-catalogs/${encodeURIComponent(slug)}`,
+    request,
+  );
+}
+
+/**
+ * Append events to a webhook event catalog.
+ */
+export async function appendWebhookEventCatalogEvents(
+  slug: string,
+  request: AppendWebhookEventCatalogEventsRequest,
+  client?: WachtClient,
+): Promise<WebhookEventCatalog> {
+  const sdkClient = client ?? getClient();
+  return sdkClient.post<WebhookEventCatalog>(
+    `/webhooks/event-catalogs/${encodeURIComponent(slug)}/append-events`,
+    request,
+  );
+}
+
+/**
+ * Set archived state for an event in a webhook event catalog.
+ */
+export async function archiveWebhookEventInCatalog(
+  slug: string,
+  request: ArchiveWebhookEventInCatalogRequest,
+  client?: WachtClient,
+): Promise<WebhookEventCatalog> {
+  const sdkClient = client ?? getClient();
+  return sdkClient.post<WebhookEventCatalog>(
+    `/webhooks/event-catalogs/${encodeURIComponent(slug)}/archive-event`,
+    request,
+  );
 }
 
 /**
@@ -145,6 +240,19 @@ export async function listWebhookEvents(
     `/webhooks/apps/${appSlug}/events`,
   );
   return response.events;
+}
+
+/**
+ * Get webhook app event catalog.
+ */
+export async function getWebhookCatalog(
+  appSlug: string,
+  client?: WachtClient,
+): Promise<WebhookEventCatalog> {
+  const sdkClient = client ?? getClient();
+  return sdkClient.get<WebhookEventCatalog>(
+    `/webhooks/apps/${appSlug}/catalog`,
+  );
 }
 
 /**
@@ -276,11 +384,14 @@ export async function listWebhookDeliveries(
 export async function getWebhookDelivery(
   appSlug: string,
   deliveryId: string,
+  options?: { status?: string },
   client?: WachtClient,
 ): Promise<WebhookDeliveryDetails> {
   const sdkClient = client ?? getClient();
   return sdkClient.get<WebhookDeliveryDetails>(
-    `/webhooks/apps/${appSlug}/deliveries/${deliveryId}`,
+    withQuery(`/webhooks/apps/${appSlug}/deliveries/${deliveryId}`, {
+      status: options?.status,
+    }),
   );
 }
 
@@ -290,12 +401,16 @@ export async function getWebhookDelivery(
 export async function replayWebhookDelivery(
   appSlug: string,
   deliveryId: string,
+  options?: { idempotency_key?: string },
   client?: WachtClient,
 ): Promise<ReplayWebhookDeliveryResponse> {
   const sdkClient = client ?? getClient();
   return sdkClient.post<ReplayWebhookDeliveryResponse>(
     `/webhooks/apps/${appSlug}/deliveries/replay`,
-    { delivery_ids: [deliveryId] },
+    {
+      delivery_ids: [deliveryId],
+      idempotency_key: options?.idempotency_key,
+    },
   );
 }
 
@@ -311,6 +426,51 @@ export async function replayWebhookDeliveries(
   return sdkClient.post<ReplayWebhookDeliveryResponse>(
     `/webhooks/apps/${appSlug}/deliveries/replay`,
     request,
+  );
+}
+
+/**
+ * List webhook replay tasks.
+ */
+export async function listWebhookReplayTasks(
+  appSlug: string,
+  options?: ListOptions,
+  client?: WachtClient,
+): Promise<ReplayTaskListResponse> {
+  const sdkClient = client ?? getClient();
+  return sdkClient.get<ReplayTaskListResponse>(
+    withQuery(`/webhooks/apps/${appSlug}/deliveries/replay`, {
+      limit: options?.limit,
+      offset: options?.offset,
+    }),
+  );
+}
+
+/**
+ * Get webhook replay task status.
+ */
+export async function getWebhookReplayTaskStatus(
+  appSlug: string,
+  taskId: string,
+  client?: WachtClient,
+): Promise<ReplayTaskStatus> {
+  const sdkClient = client ?? getClient();
+  return sdkClient.get<ReplayTaskStatus>(
+    `/webhooks/apps/${appSlug}/deliveries/replay/${taskId}`,
+  );
+}
+
+/**
+ * Cancel webhook replay task.
+ */
+export async function cancelWebhookReplayTask(
+  appSlug: string,
+  taskId: string,
+  client?: WachtClient,
+): Promise<ReplayTaskCancelResponse> {
+  const sdkClient = client ?? getClient();
+  return sdkClient.post<ReplayTaskCancelResponse>(
+    `/webhooks/apps/${appSlug}/deliveries/replay/${taskId}/cancel`,
   );
 }
 
@@ -338,9 +498,9 @@ export async function getWebhookAnalytics(
 export async function getWebhookStats(
   appSlug: string,
   client?: WachtClient,
-): Promise<WebhookAnalytics> {
+): Promise<WebhookStats> {
   const sdkClient = client ?? getClient();
-  return sdkClient.get<WebhookAnalytics>(`/webhooks/apps/${appSlug}/stats`);
+  return sdkClient.get<WebhookStats>(`/webhooks/apps/${appSlug}/stats`);
 }
 
 /**
@@ -348,16 +508,16 @@ export async function getWebhookStats(
  */
 export async function getWebhookTimeseries(
   appSlug: string,
-  options: {
-    interval: "minute" | "hour" | "day" | "week" | "month";
+  options?: {
+    interval?: "minute" | "hour" | "day" | "week" | "month";
     endpoint_id?: number;
     start_date?: string;
     end_date?: string;
   },
   client?: WachtClient,
-): Promise<WebhookTimeseriesData[]> {
+): Promise<WebhookTimeseriesResult> {
   const sdkClient = client ?? getClient();
-  return sdkClient.get<WebhookTimeseriesData[]>(
+  return sdkClient.get<WebhookTimeseriesResult>(
     withQuery(`/webhooks/apps/${appSlug}/timeseries`, options),
   );
 }

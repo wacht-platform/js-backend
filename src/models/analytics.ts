@@ -2,14 +2,18 @@
  * Analytics stats summary
  */
 export interface AnalyticsStats {
-  total_users: number;
-  active_users: number;
-  total_organizations: number;
-  total_workspaces: number;
-  new_users_today: number;
-  new_users_this_week: number;
-  new_users_this_month: number;
-  daily_metrics?: DailyAuthMetric[];
+  unique_signins: number;
+  signups: number;
+  organizations_created: number;
+  workspaces_created: number;
+  total_signups: number;
+  unique_signins_change?: number;
+  signups_change?: number;
+  organizations_created_change?: number;
+  workspaces_created_change?: number;
+  daily_metrics: DailyAuthMetric[];
+  recent_signups: RecentSignup[];
+  recent_signins: RecentSignup[];
 }
 
 /**
@@ -25,20 +29,8 @@ export interface DailyAuthMetric {
  * Recent signup
  */
 export interface RecentSignup {
-  id: string;
-  user_id: string;
-  first_name: string;
-  last_name: string;
-  email_address?: string;
-  phone_number?: string;
-  created_at: string;
-}
-
-/**
- * Recent signup organization
- */
-export interface RecentSignupOrganization {
-  id: string;
-  name: string;
-  created_at: string;
+  name?: string;
+  email?: string;
+  method?: string;
+  date: string;
 }

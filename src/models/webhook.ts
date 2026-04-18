@@ -21,6 +21,25 @@ export interface WebhookApp {
   updated_at: string;
 }
 
+export interface WebhookEventDefinition {
+  name: string;
+  description: string;
+  group?: string;
+  schema?: Record<string, unknown> | null;
+  example_payload?: Record<string, unknown> | null;
+  is_archived?: boolean;
+}
+
+export interface WebhookEventCatalog {
+  deployment_id: string;
+  slug: string;
+  name: string;
+  description?: string;
+  events: WebhookEventDefinition[];
+  created_at: string;
+  updated_at: string;
+}
+
 export interface WebhookAppEvent {
   deployment_id: string;
   app_slug: string;
@@ -82,6 +101,7 @@ export interface WebhookDeliveryDetails {
 }
 
 export interface CreateWebhookAppRequest {
+  app_slug?: string;
   name: string;
   description?: string;
   failure_notification_emails?: string[];
@@ -94,6 +114,27 @@ export interface UpdateWebhookAppRequest {
   is_active?: boolean;
   failure_notification_emails?: string[];
   event_catalog_slug?: string;
+}
+
+export interface CreateWebhookEventCatalogRequest {
+  slug: string;
+  name: string;
+  description?: string;
+  events: WebhookEventDefinition[];
+}
+
+export interface UpdateWebhookEventCatalogRequest {
+  name?: string;
+  description?: string;
+}
+
+export interface AppendWebhookEventCatalogEventsRequest {
+  events: WebhookEventDefinition[];
+}
+
+export interface ArchiveWebhookEventInCatalogRequest {
+  event_name: string;
+  is_archived: boolean;
 }
 
 export interface CreateWebhookEndpointRequest {
@@ -153,6 +194,32 @@ export interface ReplayWebhookDeliveryResponse {
   task_id?: string | null;
 }
 
+export interface ReplayTaskStatus {
+  task_id: string;
+  app_slug: string;
+  status: string;
+  created_at?: string;
+  started_at?: string;
+  completed_at?: string;
+  total_count: number;
+  processed: number;
+  replayed_count: number;
+  failed_count: number;
+  last_delivery_id?: number;
+}
+
+export interface ReplayTaskListResponse {
+  data: ReplayTaskStatus[];
+  limit: number;
+  offset: number;
+  has_more: boolean;
+}
+
+export interface ReplayTaskCancelResponse {
+  status: string;
+  message: string;
+}
+
 export interface ReactivateWebhookEndpointResponse {
   success: boolean;
   message: string;
@@ -191,6 +258,13 @@ export interface WebhookAnalyticsFailureReason {
   count: number;
 }
 
+export interface WebhookStats {
+  total_deliveries: number;
+  success_rate: number;
+  active_endpoints: number;
+  failed_deliveries_24h: number;
+}
+
 export interface WebhookAnalytics {
   total_events: number;
   total_deliveries: number;
@@ -216,4 +290,9 @@ export interface WebhookTimeseriesData {
   filtered_deliveries: number;
   avg_response_time_ms?: number | null;
   success_rate: number;
+}
+
+export interface WebhookTimeseriesResult {
+  data: WebhookTimeseriesData[];
+  interval: string;
 }

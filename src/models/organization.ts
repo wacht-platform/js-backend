@@ -1,3 +1,6 @@
+import type { Segment } from "./segment";
+import type { Workspace } from "./workspace";
+
 /**
  * Organization model
  * Generated from OpenAPI spec - matches backend API exactly
@@ -12,6 +15,31 @@ export interface Organization {
   member_count: number;
   public_metadata: Record<string, unknown>;
   private_metadata: Record<string, unknown>;
+}
+
+export type OrganizationListSortOrder = "asc" | "desc";
+export type OrganizationMemberListSortOrder = "asc" | "desc";
+
+export interface ListOrganizationsOptions {
+  limit?: number;
+  offset?: number;
+  sort_key?: string;
+  sort_order?: OrganizationListSortOrder;
+  search?: string;
+}
+
+export interface ListOrganizationMembersOptions {
+  limit?: number;
+  offset?: number;
+  search?: string;
+  sort_key?: string;
+  sort_order?: OrganizationMemberListSortOrder;
+}
+
+export interface OrganizationDetails extends Organization {
+  roles: OrganizationRole[];
+  workspaces: Workspace[];
+  segments: Segment[];
 }
 
 /**
@@ -51,9 +79,10 @@ export interface OrganizationRole {
 export interface CreateOrganizationRequest {
   name: string;
   description?: string;
-  image_url?: string;
   public_metadata?: Record<string, unknown>;
   private_metadata?: Record<string, unknown>;
+  /** Optional organization image uploaded as multipart/form-data */
+  organization_image?: File | Blob;
 }
 
 /**
@@ -62,9 +91,12 @@ export interface CreateOrganizationRequest {
 export interface UpdateOrganizationRequest {
   name?: string;
   description?: string;
-  image_url?: string;
   public_metadata?: Record<string, unknown>;
   private_metadata?: Record<string, unknown>;
+  /** Remove the stored organization image when true */
+  remove_image?: boolean;
+  /** Optional organization image uploaded as multipart/form-data */
+  organization_image?: File | Blob;
 }
 
 /**

@@ -61,8 +61,8 @@ import type {
 function buildListQuery(options?: ListOptions & { search?: string }): string {
   if (!options) return "";
   return buildOptionalQuery({
-    limit: options.limit ?? 50,
-    offset: options.offset ?? 0,
+    limit: options.limit,
+    offset: options.offset,
     search: options.search,
   });
 }
@@ -478,9 +478,9 @@ export async function discoverMcpServerAuth(
 export async function listActorMcpServers(
   actorId: string,
   client?: WachtClient,
-): Promise<ActorMcpServerSummary[]> {
+): Promise<PaginatedResponse<ActorMcpServerSummary>> {
   const sdkClient = client ?? getClient();
-  return sdkClient.get<ActorMcpServerSummary[]>(
+  return sdkClient.get<PaginatedResponse<ActorMcpServerSummary>>(
     `/ai/actor-mcp-servers?actor_id=${encodeURIComponent(actorId)}`,
   );
 }
@@ -513,9 +513,9 @@ export async function listActorProjects(
   actorId: string,
   includeArchived = false,
   client?: WachtClient,
-): Promise<ActorProject[]> {
+): Promise<PaginatedResponse<ActorProject>> {
   const sdkClient = client ?? getClient();
-  return sdkClient.get<ActorProject[]>(
+  return sdkClient.get<PaginatedResponse<ActorProject>>(
     `/ai/actor-projects${buildOptionalQuery({ actor_id: actorId, include_archived: includeArchived ? true : undefined })}`,
   );
 }
@@ -598,9 +598,9 @@ export async function getProjectTaskBoard(
 export async function listProjectTaskBoardItems(
   projectId: string,
   client?: WachtClient,
-): Promise<ProjectTaskBoardItem[]> {
+): Promise<PaginatedResponse<ProjectTaskBoardItem>> {
   const sdkClient = client ?? getClient();
-  return sdkClient.get<ProjectTaskBoardItem[]>(
+  return sdkClient.get<PaginatedResponse<ProjectTaskBoardItem>>(
     `/ai/actor-projects/${projectId}/board/items`,
   );
 }
@@ -632,9 +632,9 @@ export async function listProjectTaskBoardItemEvents(
   projectId: string,
   itemId: string,
   client?: WachtClient,
-): Promise<ProjectTaskBoardItemEvent[]> {
+): Promise<PaginatedResponse<ProjectTaskBoardItemEvent>> {
   const sdkClient = client ?? getClient();
-  return sdkClient.get<ProjectTaskBoardItemEvent[]>(
+  return sdkClient.get<PaginatedResponse<ProjectTaskBoardItemEvent>>(
     `/ai/actor-projects/${projectId}/board/items/${itemId}/events`,
   );
 }
@@ -643,9 +643,9 @@ export async function listProjectTaskBoardItemAssignments(
   projectId: string,
   itemId: string,
   client?: WachtClient,
-): Promise<ProjectTaskBoardItemAssignment[]> {
+): Promise<PaginatedResponse<ProjectTaskBoardItemAssignment>> {
   const sdkClient = client ?? getClient();
-  return sdkClient.get<ProjectTaskBoardItemAssignment[]>(
+  return sdkClient.get<PaginatedResponse<ProjectTaskBoardItemAssignment>>(
     `/ai/actor-projects/${projectId}/board/items/${itemId}/assignments`,
   );
 }
@@ -728,9 +728,9 @@ export async function listProjectThreads(
   projectId: string,
   includeArchived = false,
   client?: WachtClient,
-): Promise<AgentThread[]> {
+): Promise<PaginatedResponse<AgentThread>> {
   const sdkClient = client ?? getClient();
-  return sdkClient.get<AgentThread[]>(
+  return sdkClient.get<PaginatedResponse<AgentThread>>(
     `/ai/actor-projects/${projectId}/threads${buildBoolQuery("include_archived", includeArchived)}`,
   );
 }
@@ -803,9 +803,9 @@ export async function unarchiveAgentThread(
 export async function listThreadEvents(
   threadId: string,
   client?: WachtClient,
-): Promise<ThreadEvent[]> {
+): Promise<PaginatedResponse<ThreadEvent>> {
   const sdkClient = client ?? getClient();
-  return sdkClient.get<ThreadEvent[]>(
+  return sdkClient.get<PaginatedResponse<ThreadEvent>>(
     `/ai/actor-project-threads/${threadId}/events`,
   );
 }
@@ -813,9 +813,9 @@ export async function listThreadEvents(
 export async function listThreadAssignments(
   threadId: string,
   client?: WachtClient,
-): Promise<ProjectTaskBoardItemAssignment[]> {
+): Promise<PaginatedResponse<ProjectTaskBoardItemAssignment>> {
   const sdkClient = client ?? getClient();
-  return sdkClient.get<ProjectTaskBoardItemAssignment[]>(
+  return sdkClient.get<PaginatedResponse<ProjectTaskBoardItemAssignment>>(
     `/ai/actor-project-threads/${threadId}/assignments`,
   );
 }

@@ -1,6 +1,13 @@
 /**
  * Deployment B2B (Business-to-Business) settings
  */
+export interface DeploymentPermissionCatalogEntry {
+  /** Stable permission key */
+  key: string;
+  /** Whether this permission is archived */
+  archived?: boolean;
+}
+
 export interface DeploymentB2bSettingsUpdates {
   // Organization/Workspace Enablement
   /** Enable organizations feature */
@@ -29,6 +36,8 @@ export interface DeploymentB2bSettingsUpdates {
   org_creation_per_user_count?: number;
   /** Organization permissions */
   organization_permissions?: string[];
+  /** Organization permission catalog entries */
+  organization_permission_catalog?: DeploymentPermissionCatalogEntry[];
 
   // Workspace Controls
   /** Maximum allowed workspace members */
@@ -47,6 +56,8 @@ export interface DeploymentB2bSettingsUpdates {
   workspaces_per_org_count?: number;
   /** Workspace permissions */
   workspace_permissions?: string[];
+  /** Workspace permission catalog entries */
+  workspace_permission_catalog?: DeploymentPermissionCatalogEntry[];
   /** Enable IP allowlist per workspace */
   ip_allowlist_per_workspace_enabled?: boolean;
 

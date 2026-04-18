@@ -1,3 +1,5 @@
+import type { Segment } from "./segment";
+
 /**
  * Workspace model
  * Generated from OpenAPI spec - matches backend API exactly
@@ -14,15 +16,53 @@ export interface Workspace {
   private_metadata: Record<string, unknown>;
 }
 
+export interface WorkspaceListItem {
+  id: string;
+  created_at: string;
+  updated_at: string;
+  name: string;
+  image_url: string;
+  description: string;
+  member_count: number;
+  organization_name: string;
+}
+
+export type WorkspaceListSortOrder = "asc" | "desc";
+export type WorkspaceMemberListSortOrder = "asc" | "desc";
+
+export interface ListWorkspacesOptions {
+  limit?: number;
+  offset?: number;
+  sort_key?: string;
+  sort_order?: WorkspaceListSortOrder;
+  search?: string;
+}
+
+export interface ListWorkspaceMembersOptions {
+  limit?: number;
+  offset?: number;
+  search?: string;
+  sort_key?: string;
+  sort_order?: WorkspaceMemberListSortOrder;
+}
+
+export interface WorkspaceDetails extends Workspace {
+  organization_id: string;
+  organization_name: string;
+  roles: WorkspaceRole[];
+  segments: Segment[];
+}
+
 /**
  * Request to create a workspace
  */
 export interface CreateWorkspaceRequest {
   name: string;
   description?: string;
-  image_url?: string;
   public_metadata?: Record<string, unknown>;
   private_metadata?: Record<string, unknown>;
+  /** Optional workspace image uploaded as multipart/form-data */
+  workspace_image?: File | Blob;
 }
 
 /**
@@ -31,9 +71,12 @@ export interface CreateWorkspaceRequest {
 export interface UpdateWorkspaceRequest {
   name?: string;
   description?: string;
-  image_url?: string;
   public_metadata?: Record<string, unknown>;
   private_metadata?: Record<string, unknown>;
+  /** Remove the stored workspace image when true */
+  remove_image?: boolean;
+  /** Optional workspace image uploaded as multipart/form-data */
+  workspace_image?: File | Blob;
 }
 
 /**

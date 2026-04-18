@@ -29,16 +29,14 @@ function getArrayField<T>(payload: unknown, key: string): T[] {
 }
 
 export async function listOAuthApps(
-  deploymentId: string,
   client?: WachtClient,
 ): Promise<OAuthApp[]> {
   const sdkClient = client ?? getClient();
-  const payload = await sdkClient.get<unknown>(`/deployments/${deploymentId}/oauth/apps`);
+  const payload = await sdkClient.get<unknown>("/oauth/apps");
   return getArrayField<OAuthApp>(payload, "apps");
 }
 
 export async function createOAuthApp(
-  deploymentId: string,
   request: CreateOAuthAppRequest,
   client?: WachtClient,
 ): Promise<OAuthApp> {
@@ -63,7 +61,7 @@ export async function createOAuthApp(
   }
 
   const payload = await sdkClient.post<unknown>(
-    `/deployments/${deploymentId}/oauth/apps`,
+    "/oauth/apps",
     formData,
   );
 
@@ -71,33 +69,30 @@ export async function createOAuthApp(
 }
 
 export async function updateOAuthApp(
-  deploymentId: string,
   oauthAppSlug: string,
   request: UpdateOAuthAppRequest,
   client?: WachtClient,
 ): Promise<OAuthApp> {
   const sdkClient = client ?? getClient();
   const payload = await sdkClient.patch<unknown>(
-    `/deployments/${deploymentId}/oauth/apps/${oauthAppSlug}`,
+    `/oauth/apps/${oauthAppSlug}`,
     request,
   );
   return getNestedRecord(payload) as unknown as OAuthApp;
 }
 
 export async function verifyOAuthAppDomain(
-  deploymentId: string,
   oauthAppSlug: string,
   client?: WachtClient,
 ): Promise<OAuthDomainVerificationResponse> {
   const sdkClient = client ?? getClient();
   const payload = await sdkClient.post<unknown>(
-    `/deployments/${deploymentId}/oauth/apps/${oauthAppSlug}/verify-domain`,
+    `/oauth/apps/${oauthAppSlug}/verify-domain`,
   );
   return getNestedRecord(payload) as unknown as OAuthDomainVerificationResponse;
 }
 
 export async function updateOAuthScope(
-  deploymentId: string,
   oauthAppSlug: string,
   scope: string,
   request: UpdateOAuthScopeRequest,
@@ -105,40 +100,37 @@ export async function updateOAuthScope(
 ): Promise<OAuthApp> {
   const sdkClient = client ?? getClient();
   const payload = await sdkClient.patch<unknown>(
-    `/deployments/${deploymentId}/oauth/apps/${oauthAppSlug}/scopes/${encodeURIComponent(scope)}`,
+    `/oauth/apps/${oauthAppSlug}/scopes/${encodeURIComponent(scope)}`,
     request,
   );
   return getNestedRecord(payload) as unknown as OAuthApp;
 }
 
 export async function archiveOAuthScope(
-  deploymentId: string,
   oauthAppSlug: string,
   scope: string,
   client?: WachtClient,
 ): Promise<OAuthApp> {
   const sdkClient = client ?? getClient();
   const payload = await sdkClient.post<unknown>(
-    `/deployments/${deploymentId}/oauth/apps/${oauthAppSlug}/scopes/${encodeURIComponent(scope)}/archive`,
+    `/oauth/apps/${oauthAppSlug}/scopes/${encodeURIComponent(scope)}/archive`,
   );
   return getNestedRecord(payload) as unknown as OAuthApp;
 }
 
 export async function unarchiveOAuthScope(
-  deploymentId: string,
   oauthAppSlug: string,
   scope: string,
   client?: WachtClient,
 ): Promise<OAuthApp> {
   const sdkClient = client ?? getClient();
   const payload = await sdkClient.post<unknown>(
-    `/deployments/${deploymentId}/oauth/apps/${oauthAppSlug}/scopes/${encodeURIComponent(scope)}/unarchive`,
+    `/oauth/apps/${oauthAppSlug}/scopes/${encodeURIComponent(scope)}/unarchive`,
   );
   return getNestedRecord(payload) as unknown as OAuthApp;
 }
 
 export async function setOAuthScopeMapping(
-  deploymentId: string,
   oauthAppSlug: string,
   scope: string,
   request: SetOAuthScopeMappingRequest,
@@ -146,40 +138,37 @@ export async function setOAuthScopeMapping(
 ): Promise<OAuthApp> {
   const sdkClient = client ?? getClient();
   const payload = await sdkClient.post<unknown>(
-    `/deployments/${deploymentId}/oauth/apps/${oauthAppSlug}/scopes/${encodeURIComponent(scope)}/mapping`,
+    `/oauth/apps/${oauthAppSlug}/scopes/${encodeURIComponent(scope)}/mapping`,
     request,
   );
   return getNestedRecord(payload) as unknown as OAuthApp;
 }
 
 export async function listOAuthClients(
-  deploymentId: string,
   oauthAppSlug: string,
   client?: WachtClient,
 ): Promise<OAuthClient[]> {
   const sdkClient = client ?? getClient();
   const payload = await sdkClient.get<unknown>(
-    `/deployments/${deploymentId}/oauth/apps/${oauthAppSlug}/clients`,
+    `/oauth/apps/${oauthAppSlug}/clients`,
   );
   return getArrayField<OAuthClient>(payload, "clients");
 }
 
 export async function createOAuthClient(
-  deploymentId: string,
   oauthAppSlug: string,
   request: CreateOAuthClientRequest,
   client?: WachtClient,
 ): Promise<OAuthClient> {
   const sdkClient = client ?? getClient();
   const payload = await sdkClient.post<unknown>(
-    `/deployments/${deploymentId}/oauth/apps/${oauthAppSlug}/clients`,
+    `/oauth/apps/${oauthAppSlug}/clients`,
     request,
   );
   return getNestedRecord(payload) as unknown as OAuthClient;
 }
 
 export async function updateOAuthClient(
-  deploymentId: string,
   oauthAppSlug: string,
   oauthClientId: string,
   request: UpdateOAuthClientRequest,
@@ -187,52 +176,48 @@ export async function updateOAuthClient(
 ): Promise<OAuthClient> {
   const sdkClient = client ?? getClient();
   const payload = await sdkClient.patch<unknown>(
-    `/deployments/${deploymentId}/oauth/apps/${oauthAppSlug}/clients/${oauthClientId}`,
+    `/oauth/apps/${oauthAppSlug}/clients/${oauthClientId}`,
     request,
   );
   return getNestedRecord(payload) as unknown as OAuthClient;
 }
 
 export async function deactivateOAuthClient(
-  deploymentId: string,
   oauthAppSlug: string,
   oauthClientId: string,
   client?: WachtClient,
 ): Promise<void> {
   const sdkClient = client ?? getClient();
   return sdkClient.delete<void>(
-    `/deployments/${deploymentId}/oauth/apps/${oauthAppSlug}/clients/${oauthClientId}`,
+    `/oauth/apps/${oauthAppSlug}/clients/${oauthClientId}`,
   );
 }
 
 export async function rotateOAuthClientSecret(
-  deploymentId: string,
   oauthAppSlug: string,
   oauthClientId: string,
   client?: WachtClient,
 ): Promise<RotateOAuthClientSecretResponse> {
   const sdkClient = client ?? getClient();
   const payload = await sdkClient.post<unknown>(
-    `/deployments/${deploymentId}/oauth/apps/${oauthAppSlug}/clients/${oauthClientId}/rotate-secret`,
+    `/oauth/apps/${oauthAppSlug}/clients/${oauthClientId}/rotate-secret`,
   );
   return getNestedRecord(payload) as unknown as RotateOAuthClientSecretResponse;
 }
 
 export async function listOAuthGrants(
-  deploymentId: string,
   oauthAppSlug: string,
   oauthClientId: string,
   client?: WachtClient,
 ): Promise<OAuthGrant[]> {
   const sdkClient = client ?? getClient();
   const payload = await sdkClient.get<unknown>(
-    `/deployments/${deploymentId}/oauth/apps/${oauthAppSlug}/clients/${oauthClientId}/grants`,
+    `/oauth/apps/${oauthAppSlug}/clients/${oauthClientId}/grants`,
   );
   return getArrayField<OAuthGrant>(payload, "grants");
 }
 
 export async function revokeOAuthGrant(
-  deploymentId: string,
   oauthAppSlug: string,
   oauthClientId: string,
   grantId: string,
@@ -240,6 +225,6 @@ export async function revokeOAuthGrant(
 ): Promise<void> {
   const sdkClient = client ?? getClient();
   return sdkClient.post<void>(
-    `/deployments/${deploymentId}/oauth/apps/${oauthAppSlug}/clients/${oauthClientId}/grants/${grantId}/revoke`,
+    `/oauth/apps/${oauthAppSlug}/clients/${oauthClientId}/grants/${grantId}/revoke`,
   );
 }

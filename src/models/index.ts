@@ -14,6 +14,7 @@ export * from './oauth';
 export * from './webhook';
 export * from './segment';
 export * from './analytics';
+export * from './deployment';
 
 // Additional types
 export interface EmailTemplate {
@@ -24,13 +25,39 @@ export interface EmailTemplate {
   template_subject: string;
 }
 
-export interface SocialConnection {
-  provider?: 'google_oauth' | 'github_oauth' | 'microsoft_oauth' | 'slack_oauth';
-  id?: string;
+export type SocialConnectionProvider =
+  | "x_oauth"
+  | "github_oauth"
+  | "gitlab_oauth"
+  | "google_oauth"
+  | "facebook_oauth"
+  | "microsoft_oauth"
+  | "linkedin_oauth"
+  | "discord_oauth"
+  | "apple_oauth";
+
+export interface SocialConnectionCredentials {
   client_id: string;
   client_secret: string;
+  redirect_uri: string;
+  scopes: string[];
+}
+
+export interface SocialConnection {
+  id: string;
+  created_at: string;
+  updated_at: string;
+  deployment_id?: string | null;
+  provider?: SocialConnectionProvider;
+  enabled: boolean;
+  credentials?: SocialConnectionCredentials;
+}
+
+export interface UpsertSocialConnectionRequest {
+  provider?: SocialConnectionProvider;
   enabled?: boolean;
   user_defined_scopes?: string[];
+  credentials?: SocialConnectionCredentials;
 }
 
 export interface SmtpConfigRequest {
@@ -54,4 +81,123 @@ export interface SmtpConfigResponse {
 export interface SmtpVerifyResponse {
   success: boolean;
   message?: string;
+}
+
+export interface DeploymentAuthEmailSettingsUpdates {
+  enabled?: boolean;
+  required?: boolean;
+  verify_signup?: boolean;
+  otp_verification_allowed?: boolean;
+  magic_link_verification_allowed?: boolean;
+}
+
+export interface DeploymentAuthPhoneSettingsUpdates {
+  enabled?: boolean;
+  required?: boolean;
+  verify_signup?: boolean;
+  sms_verification_allowed?: boolean;
+  whatsapp_verification_allowed?: boolean;
+}
+
+export interface DeploymentAuthUsernameSettingsUpdates {
+  enabled?: boolean;
+  required?: boolean;
+  min_length?: number;
+  max_length?: number;
+}
+
+export interface DeploymentAuthPasswordSettingsUpdates {
+  enabled?: boolean;
+  min_length?: number;
+  require_lowercase?: boolean;
+  require_uppercase?: boolean;
+  require_number?: boolean;
+  require_special?: boolean;
+}
+
+export interface DeploymentAuthNameSettingsUpdates {
+  first_name_enabled?: boolean;
+  first_name_required?: boolean;
+  last_name_enabled?: boolean;
+  last_name_required?: boolean;
+}
+
+export interface DeploymentAuthEmailLinkSettingsUpdates {
+  enabled?: boolean;
+  require_same_device?: boolean;
+}
+
+export interface DeploymentAuthPasskeySettingsUpdates {
+  enabled?: boolean;
+  prompt_registration_on_auth?: boolean;
+  allow_autofill?: boolean;
+}
+
+export interface DeploymentAuthIndividualSettingsUpdates {
+  enabled?: boolean;
+  required?: boolean;
+}
+
+export interface DeploymentAuthFactorSettingsUpdates {
+  email_password_enabled?: boolean;
+  username_password_enabled?: boolean;
+  sso_enabled?: boolean;
+  web3_wallet_enabled?: boolean;
+  email_otp_enabled?: boolean;
+  phone_otp_enabled?: boolean;
+  magic_link?: DeploymentAuthEmailLinkSettingsUpdates;
+  passkey?: DeploymentAuthPasskeySettingsUpdates;
+  second_factor_authenticator_enabled?: boolean;
+  second_factor_backup_code_enabled?: boolean;
+}
+
+export interface DeploymentAuthSettingsUpdates {
+  email?: DeploymentAuthEmailSettingsUpdates;
+  phone?: DeploymentAuthPhoneSettingsUpdates;
+  username?: DeploymentAuthUsernameSettingsUpdates;
+  password?: DeploymentAuthPasswordSettingsUpdates;
+  name?: DeploymentAuthNameSettingsUpdates;
+  authentication_factors?: DeploymentAuthFactorSettingsUpdates;
+  second_factor_policy?: string;
+  first_factor?: string;
+  backup_code?: DeploymentAuthIndividualSettingsUpdates;
+  web3_wallet?: DeploymentAuthIndividualSettingsUpdates;
+  multi_session_support?: {
+    enabled: boolean;
+    max_accounts_per_session: number;
+    max_sessions_per_account: number;
+  };
+  session_token_lifetime?: number;
+  session_validity_period?: number;
+  session_inactive_timeout?: number;
+}
+
+export interface DeploymentDisplaySettingsUpdates {
+  app_name?: string;
+  tos_page_url?: string;
+  sign_in_page_url?: string;
+  sign_up_page_url?: string;
+  after_sign_out_one_page_url?: string;
+  after_sign_out_all_page_url?: string;
+  favicon_image_url?: string;
+  logo_image_url?: string;
+  privacy_policy_url?: string;
+  signup_terms_statement?: string;
+  signup_terms_statement_shown?: boolean;
+  light_mode_settings?: Record<string, unknown>;
+  dark_mode_settings?: Record<string, unknown>;
+  after_logo_click_url?: string;
+  organization_profile_url?: string;
+  create_organization_url?: string;
+  default_user_profile_image_url?: string;
+  default_organization_profile_image_url?: string;
+  default_workspace_profile_image_url?: string;
+  use_initials_for_user_profile_image?: boolean;
+  use_initials_for_organization_profile_image?: boolean;
+  after_signup_redirect_url?: string;
+  after_signin_redirect_url?: string;
+  user_profile_url?: string;
+  after_create_organization_redirect_url?: string;
+  waitlist_page_url?: string;
+  support_page_url?: string;
 }

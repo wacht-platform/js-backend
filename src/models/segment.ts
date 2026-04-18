@@ -27,21 +27,43 @@ export interface UpdateSegmentRequest {
   name?: string;
 }
 
-/**
- * Segment filter
- * Used for segment creation and evaluation
- */
-export interface SegmentFilter {
-  field: string;
-  operator: 'equals' | 'not_equals' | 'contains' | 'not_contains' | 'greater_than' | 'less_than' | 'in' | 'not_in';
-  value: unknown;
+export interface ListSegmentsOptions {
+  limit?: number;
+  offset?: number;
+  search?: string;
+  sort_key?: string;
+  sort_order?: string;
 }
 
-/**
- * Segment evaluation result
- * Returned by segment evaluation endpoints
- */
-export interface SegmentEvaluationResult {
-  segment_id: string;
-  matched: boolean;
+export interface UserSegmentDataFilter {
+  name?: string;
+  email?: string;
+  phone?: string;
+}
+
+export interface OrganizationSegmentDataFilter {
+  name?: string;
+}
+
+export interface WorkspaceSegmentDataFilter {
+  name?: string;
+}
+
+export interface SegmentDataFilters {
+  user?: UserSegmentDataFilter;
+  organization?: OrganizationSegmentDataFilter;
+  workspace?: WorkspaceSegmentDataFilter;
+  segment_id?: string;
+}
+
+export interface SegmentDataRequest {
+  target_type: "user" | "organization" | "workspace";
+  filters?: SegmentDataFilters;
+}
+
+export interface AnalyzedEntity {
+  id: string;
+  name?: string;
+  first_name?: string;
+  last_name?: string;
 }
