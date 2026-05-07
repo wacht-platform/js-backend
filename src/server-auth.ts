@@ -652,14 +652,23 @@ export async function exchangeSessionForAuthToken(
   sessionToken: string,
   options: WachtServerOptions = {},
   isDevSession = false,
+  exchangeOptions: {
+    forwardedFor?: string | null;
+  } = {},
 ): Promise<{
   authToken: string | null;
+  authTokenExpiresAt: number | null;
   nextDevSession: string | null;
   upstreamSessionSetCookie: string | null;
 }> {
   const frontendApiUrl = getFrontendApiUrl(options);
   const endpoint = new URL(`${frontendApiUrl}/session/token`);
   const headers = new Headers({ Accept: "application/json" });
+  const forwardedFor = normalizeForwardedFor(exchangeOptions.forwardedFor);
+
+  if (forwardedFor) {
+    headers.set("X-Wacht-Forwarded-For", forwardedFor);
+  }
 
   if (isDevSession) {
     endpoint.searchParams.set("__dev_session__", sessionToken);
@@ -677,17 +686,29 @@ export async function exchangeSessionForAuthToken(
   if (!response.ok) {
     return {
       authToken: null,
+      authTokenExpiresAt: null,
       nextDevSession: null,
       upstreamSessionSetCookie: response.headers.get("set-cookie"),
     };
   }
 
-  const json = (await response.json()) as { data?: { token?: string } };
+  const json = (await response.json()) as {
+    data?: { token?: string; expires?: number };
+  };
   return {
     authToken: json?.data?.token || null,
+    authTokenExpiresAt:
+      typeof json?.data?.expires === "number" ? json.data.expires : null,
     nextDevSession: response.headers.get("x-development-session"),
     upstreamSessionSetCookie: response.headers.get("set-cookie"),
   };
+}
+
+function normalizeForwardedFor(value?: string | null): string | null {
+  if (!value) return null;
+
+  const candidate = value.split(",")[0]?.trim();
+  return candidate || null;
 }
 
 async function verifyAuthTokenDetailed(

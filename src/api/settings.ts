@@ -14,6 +14,8 @@ import type {
   SmtpVerifyResponse,
   DeploymentAuthSettingsUpdates,
   DeploymentDisplaySettingsUpdates,
+  DeploymentOrganizationRole,
+  DeploymentWorkspaceRole,
 } from "../models";
 
 /**
@@ -46,6 +48,30 @@ export async function updateB2BSettings(
 ): Promise<void> {
   const sdkClient = client ?? getClient();
   return sdkClient.patch<void>("/settings/b2b", request);
+}
+
+/**
+ * List deployment-level organization roles.
+ */
+export async function getDeploymentOrganizationRoles(
+  client?: WachtClient,
+): Promise<PaginatedResponse<DeploymentOrganizationRole>> {
+  const sdkClient = client ?? getClient();
+  return sdkClient.get<PaginatedResponse<DeploymentOrganizationRole>>(
+    "/settings/b2b/organization-roles",
+  );
+}
+
+/**
+ * List deployment-level workspace roles.
+ */
+export async function getDeploymentWorkspaceRoles(
+  client?: WachtClient,
+): Promise<PaginatedResponse<DeploymentWorkspaceRole>> {
+  const sdkClient = client ?? getClient();
+  return sdkClient.get<PaginatedResponse<DeploymentWorkspaceRole>>(
+    "/settings/b2b/workspace-roles",
+  );
 }
 
 /**

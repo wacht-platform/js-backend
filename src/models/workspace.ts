@@ -110,6 +110,17 @@ export interface WorkspaceRole {
   is_deployment_level: boolean;
 }
 
+export interface DeploymentWorkspaceRole {
+  id: string;
+  created_at: string;
+  updated_at: string;
+  name: string;
+  permissions: string[];
+  organization_id?: string;
+  deployment_id: string;
+  workspace_id?: string;
+}
+
 /**
  * Request to add a member to a workspace
  */

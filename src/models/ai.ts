@@ -310,6 +310,25 @@ export interface DiscoverMcpServerAuthRequest {
   endpoint: string;
 }
 
+export interface Actor {
+  id: string;
+  deployment_id: string;
+  subject_type: string;
+  external_key: string;
+  display_name?: string;
+  metadata: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+  archived_at?: string;
+}
+
+export interface CreateActorRequest {
+  subject_type: string;
+  external_key: string;
+  display_name?: string;
+  metadata?: Record<string, unknown>;
+}
+
 export interface ActorProject {
   id: string;
   deployment_id: string;
@@ -402,27 +421,93 @@ export interface ProjectTaskBoardItem {
   title: string;
   description?: string;
   status: string;
-  priority: string;
   assigned_thread_id?: string;
   metadata?: Record<string, unknown>;
   completed_at?: string;
   archived_at?: string;
   created_at: string;
   updated_at: string;
+  state_version: string;
+  schedule_id?: string;
+  scheduled_for?: string;
+  fired_at?: string;
+  pending_question?: Record<string, unknown>;
+  pending_approval?: Record<string, unknown>;
+  mounts: Record<string, unknown>;
+}
+
+export interface ProjectTaskBoardItemComment {
+  id: string;
+  deployment_id: string;
+  board_item_id: string;
+  actor_id: string;
+  body: string;
+  metadata: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+  archived_at?: string;
+  resolved_at?: string;
+  resolved_by_thread_id?: string;
+  resolution_summary?: string;
 }
 
 export interface CreateProjectTaskBoardItemRequest {
   title: string;
   description?: string;
   status?: string;
-  priority?: string;
+  schedule_kind?: string;
+  next_run_at?: unknown;
+  interval_seconds?: number;
+  mounts?: ScheduleMount[];
 }
 
 export interface UpdateProjectTaskBoardItemRequest {
   title?: string;
   description?: string;
   status?: string;
-  priority?: string;
+  schedule_kind?: string;
+  next_run_at?: unknown;
+  interval_seconds?: number;
+  clear_schedule?: boolean;
+  mounts?: ScheduleMount[];
+}
+
+export interface ScheduleMount {
+  [key: string]: unknown;
+}
+
+export type AnswerValue =
+  | { kind: "free_text"; value: string }
+  | { kind: "single_choice"; value: string }
+  | { kind: "multi_choice"; values: string[] }
+  | { kind: "yes_no"; value: boolean }
+  | { kind: "number"; value: number }
+  | { kind: "date"; value: string }
+  | { kind: "confirm"; accepted: boolean };
+
+export interface QuestionAnswer {
+  question_id: string;
+  value: AnswerValue;
+}
+
+export interface AnswerSubmission {
+  answers: QuestionAnswer[];
+}
+
+export type ToolApprovalMode = "allow_once" | "allow_always";
+
+export interface ApprovalSubmissionItem {
+  tool_name: string;
+  mode: ToolApprovalMode;
+}
+
+export interface ApprovalSubmission {
+  request_message_id: string;
+  approvals: ApprovalSubmissionItem[];
+}
+
+export interface CreateProjectTaskBoardItemCommentRequest {
+  body: string;
 }
 
 export interface ProjectTaskBoardAssignmentTarget {
@@ -460,7 +545,6 @@ export interface ProjectTaskBoardItemAssignment {
   board_item_id: string;
   thread_id: string;
   assignment_role: string;
-  assignment_order: number;
   status: string;
   instructions?: string;
   handoff_file_path?: string;
@@ -611,6 +695,109 @@ export interface ActorMcpServerSummary {
 
 export interface ActorMcpServerConnectResponse {
   auth_url: string;
+}
+
+export interface ComposioEnabledApp {
+  slug: string;
+  auth_config_id: string;
+  display_name?: string;
+  logo_url?: string;
+  auth_scheme?: string;
+}
+
+export interface ComposioConfigResponse {
+  enabled: boolean;
+  use_platform_key: boolean;
+  api_key_set: boolean;
+  enabled_apps: ComposioEnabledApp[];
+}
+
+export interface UpdateComposioConfigRequest {
+  enabled?: boolean;
+  use_platform_key?: boolean;
+  api_key?: string | null;
+  enabled_apps?: ComposioEnabledApp[];
+}
+
+export interface ComposioToolkit {
+  slug: string;
+  name: string;
+  description?: string;
+  logo?: string;
+  categories: string[];
+  auth_schemes: string[];
+  tool_count: number;
+}
+
+export interface ComposioToolkitListResponse {
+  toolkits: ComposioToolkit[];
+  next_cursor?: string;
+}
+
+export interface ComposioAuthConfigSummary {
+  id: string;
+  name: string;
+  auth_scheme?: string;
+  is_composio_managed: boolean;
+  toolkit_slug: string;
+}
+
+export interface ComposioAuthConfigListResponse {
+  auth_configs: ComposioAuthConfigSummary[];
+}
+
+export type ComposioEnableAppAuth =
+  | {
+      type: "managed";
+      auth_scheme?: string;
+      credentials?: Record<string, unknown>;
+    }
+  | {
+      type: "custom";
+      auth_scheme: string;
+      credentials?: Record<string, unknown>;
+    }
+  | {
+      type: "use_existing";
+      auth_config_id: string;
+      auth_scheme?: string;
+    };
+
+export interface EnableComposioAppRequest {
+  slug: string;
+  display_name?: string;
+  logo_url?: string;
+  auth: ComposioEnableAppAuth;
+}
+
+export interface ComposioToolkitAuthField {
+  name: string;
+  display_name: string;
+  type: string;
+  description: string;
+  required: boolean;
+  default?: string;
+}
+
+export interface ComposioToolkitAuthFields {
+  required: ComposioToolkitAuthField[];
+  optional: ComposioToolkitAuthField[];
+}
+
+export interface ComposioToolkitAuthMode {
+  mode: string;
+  name: string;
+  auth_config_creation: ComposioToolkitAuthFields;
+  connected_account_initiation: ComposioToolkitAuthFields;
+  auth_hint_url?: string;
+}
+
+export interface ComposioToolkitDetailsResponse {
+  slug: string;
+  name: string;
+  logo?: string;
+  composio_managed_auth_schemes: string[];
+  auth_modes: ComposioToolkitAuthMode[];
 }
 
 export interface CursorPage<T> {

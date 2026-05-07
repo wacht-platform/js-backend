@@ -5,7 +5,7 @@
 <p align="center">Backend SDK for Wacht APIs, server authentication, gateway authorization, and webhook verification.</p>
 
 <p align="center">
-  <a href="https://docs.wacht.dev">Documentation</a> |
+  <a href="https://wacht.dev/docs">Documentation</a> |
   <a href="https://www.npmjs.com/package/@wacht/backend">npm</a> |
   <a href="https://github.com/wacht-platform">GitHub</a>
 </p>

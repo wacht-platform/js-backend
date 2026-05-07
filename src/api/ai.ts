@@ -6,9 +6,16 @@ import {
   type ListOptions,
 } from "../client";
 import type {
+  Actor,
   ActorMcpServerConnectResponse,
   ActorMcpServerSummary,
   ActorProject,
+  AnswerSubmission,
+  ApprovalSubmission,
+  ComposioAuthConfigListResponse,
+  ComposioConfigResponse,
+  ComposioToolkitDetailsResponse,
+  ComposioToolkitListResponse,
   AgentDetailsResponse,
   AgentThread,
   AiAgent,
@@ -24,12 +31,15 @@ import type {
   SkillScope,
   SkillTreeResponse,
   CreateActorProjectRequest,
+  CreateActorRequest,
   CreateAgentThreadRequest,
   CreateAiAgentRequest,
   CreateAiKnowledgeBaseRequest,
   CreateAiToolRequest,
   CreateMcpServerRequest,
+  CreateProjectTaskBoardItemCommentRequest,
   DiscoverMcpServerAuthRequest,
+  EnableComposioAppRequest,
   McpServerCreateResponse,
   CreateProjectTaskBoardItemRequest,
   CursorPage,
@@ -41,12 +51,12 @@ import type {
   ProjectTaskBoard,
   ProjectTaskBoardItem,
   ProjectTaskBoardItemAssignment,
-  ProjectTaskBoardItemEvent,
+  ProjectTaskBoardItemComment,
   TaskWorkspaceFileContent,
   TaskWorkspaceListing,
-  ThreadEvent,
   ThreadMessagesResponse,
   ThreadTaskGraph,
+  UpdateComposioConfigRequest,
   UpdateActorProjectRequest,
   UpdateAgentThreadRequest,
   UpdateAiAgentRequest,
@@ -55,7 +65,6 @@ import type {
   UpdateAiSettingsRequest,
   UpdateMcpServerRequest,
   UpdateProjectTaskBoardItemRequest,
-  AppendProjectTaskBoardItemJournalRequest,
 } from "../models";
 
 function buildListQuery(options?: ListOptions & { search?: string }): string {
@@ -509,6 +518,82 @@ export async function disconnectActorMcpServer(
   );
 }
 
+export async function createActor(
+  request: CreateActorRequest,
+  client?: WachtClient,
+): Promise<Actor> {
+  const sdkClient = client ?? getClient();
+  return sdkClient.post<Actor>("/ai/actors", request);
+}
+
+export async function getComposioConfig(
+  client?: WachtClient,
+): Promise<ComposioConfigResponse> {
+  const sdkClient = client ?? getClient();
+  return sdkClient.get<ComposioConfigResponse>("/ai/composio/config");
+}
+
+export async function updateComposioConfig(
+  request: UpdateComposioConfigRequest,
+  client?: WachtClient,
+): Promise<ComposioConfigResponse> {
+  const sdkClient = client ?? getClient();
+  return sdkClient.patch<ComposioConfigResponse>("/ai/composio/config", request);
+}
+
+export async function listComposioToolkits(
+  options: { search?: string; category?: string; cursor?: string; limit?: number } = {},
+  client?: WachtClient,
+): Promise<ComposioToolkitListResponse> {
+  const sdkClient = client ?? getClient();
+  return sdkClient.get<ComposioToolkitListResponse>(
+    `/ai/composio/toolkits${buildOptionalQuery({
+      search: options.search,
+      category: options.category,
+      cursor: options.cursor,
+      limit: options.limit,
+    })}`,
+  );
+}
+
+export async function enableComposioApp(
+  request: EnableComposioAppRequest,
+  client?: WachtClient,
+): Promise<ComposioConfigResponse> {
+  const sdkClient = client ?? getClient();
+  return sdkClient.post<ComposioConfigResponse>("/ai/composio/apps", request);
+}
+
+export async function disableComposioApp(
+  slug: string,
+  client?: WachtClient,
+): Promise<ComposioConfigResponse> {
+  const sdkClient = client ?? getClient();
+  return sdkClient.delete<ComposioConfigResponse>(
+    `/ai/composio/apps/${encodeURIComponent(slug)}`,
+  );
+}
+
+export async function listComposioToolkitAuthConfigs(
+  slug: string,
+  client?: WachtClient,
+): Promise<ComposioAuthConfigListResponse> {
+  const sdkClient = client ?? getClient();
+  return sdkClient.get<ComposioAuthConfigListResponse>(
+    `/ai/composio/toolkits/${encodeURIComponent(slug)}/auth-configs`,
+  );
+}
+
+export async function getComposioToolkitAuthDetails(
+  slug: string,
+  client?: WachtClient,
+): Promise<ComposioToolkitDetailsResponse> {
+  const sdkClient = client ?? getClient();
+  return sdkClient.get<ComposioToolkitDetailsResponse>(
+    `/ai/composio/toolkits/${encodeURIComponent(slug)}/auth-details`,
+  );
+}
+
 export async function listActorProjects(
   actorId: string,
   includeArchived = false,
@@ -628,17 +713,6 @@ export async function getProjectTaskBoardItem(
   );
 }
 
-export async function listProjectTaskBoardItemEvents(
-  projectId: string,
-  itemId: string,
-  client?: WachtClient,
-): Promise<PaginatedResponse<ProjectTaskBoardItemEvent>> {
-  const sdkClient = client ?? getClient();
-  return sdkClient.get<PaginatedResponse<ProjectTaskBoardItemEvent>>(
-    `/ai/actor-projects/${projectId}/board/items/${itemId}/events`,
-  );
-}
-
 export async function listProjectTaskBoardItemAssignments(
   projectId: string,
   itemId: string,
@@ -711,15 +785,65 @@ export async function unarchiveProjectTaskBoardItem(
   );
 }
 
-export async function appendProjectTaskBoardItemJournal(
+export async function cancelProjectTaskBoardItem(
   projectId: string,
   itemId: string,
-  request: AppendProjectTaskBoardItemJournalRequest,
   client?: WachtClient,
-): Promise<ProjectTaskBoardItemEvent> {
+): Promise<ProjectTaskBoardItem> {
   const sdkClient = client ?? getClient();
-  return sdkClient.post<ProjectTaskBoardItemEvent>(
-    `/ai/actor-projects/${projectId}/board/items/${itemId}/journal`,
+  return sdkClient.post<ProjectTaskBoardItem>(
+    `/ai/actor-projects/${projectId}/board/items/${itemId}/cancel`,
+    {},
+  );
+}
+
+export async function answerProjectTaskBoardItemQuestion(
+  projectId: string,
+  itemId: string,
+  request: AnswerSubmission,
+  client?: WachtClient,
+): Promise<ProjectTaskBoardItem> {
+  const sdkClient = client ?? getClient();
+  return sdkClient.post<ProjectTaskBoardItem>(
+    `/ai/actor-projects/${projectId}/board/items/${itemId}/answer`,
+    request,
+  );
+}
+
+export async function approveProjectTaskBoardItemTool(
+  projectId: string,
+  itemId: string,
+  request: ApprovalSubmission,
+  client?: WachtClient,
+): Promise<ProjectTaskBoardItem> {
+  const sdkClient = client ?? getClient();
+  return sdkClient.post<ProjectTaskBoardItem>(
+    `/ai/actor-projects/${projectId}/board/items/${itemId}/approval`,
+    request,
+  );
+}
+
+export async function listProjectTaskBoardItemComments(
+  projectId: string,
+  itemId: string,
+  client?: WachtClient,
+): Promise<PaginatedResponse<ProjectTaskBoardItemComment>> {
+  const sdkClient = client ?? getClient();
+  return sdkClient.get<PaginatedResponse<ProjectTaskBoardItemComment>>(
+    `/ai/actor-projects/${projectId}/board/items/${itemId}/comments`,
+  );
+}
+
+export async function createProjectTaskBoardItemComment(
+  projectId: string,
+  itemId: string,
+  actorId: string,
+  request: CreateProjectTaskBoardItemCommentRequest,
+  client?: WachtClient,
+): Promise<ProjectTaskBoardItemComment> {
+  const sdkClient = client ?? getClient();
+  return sdkClient.post<ProjectTaskBoardItemComment>(
+    `/ai/actor-projects/${projectId}/board/items/${itemId}/comments${buildOptionalQuery({ actor_id: actorId })}`,
     request,
   );
 }
@@ -797,16 +921,6 @@ export async function unarchiveAgentThread(
   return sdkClient.post<AgentThread>(
     `/ai/actor-project-threads/${threadId}/unarchive`,
     {},
-  );
-}
-
-export async function listThreadEvents(
-  threadId: string,
-  client?: WachtClient,
-): Promise<PaginatedResponse<ThreadEvent>> {
-  const sdkClient = client ?? getClient();
-  return sdkClient.get<PaginatedResponse<ThreadEvent>>(
-    `/ai/actor-project-threads/${threadId}/events`,
   );
 }
 

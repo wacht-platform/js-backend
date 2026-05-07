@@ -73,6 +73,16 @@ export interface OrganizationRole {
   is_deployment_level: boolean;
 }
 
+export interface DeploymentOrganizationRole {
+  id: string;
+  created_at: string;
+  updated_at: string;
+  name: string;
+  permissions: string[];
+  deployment_id: string;
+  organization_id?: string;
+}
+
 /**
  * Request to create an organization
  */

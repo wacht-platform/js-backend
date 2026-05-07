@@ -50,12 +50,14 @@ export interface RequestConfig extends Omit<RequestInit, 'body'> {
 export interface PaginatedResponse<T> {
   /** The data items */
   data: T[];
-  /** Whether there are more items available */
-  has_more: boolean;
+  /** Total number of items available */
+  total: number;
   /** The limit used for this page */
-  limit?: number;
+  limit: number;
   /** The offset used for this page */
-  offset?: number;
+  offset: number;
+  /** Cursor-style endpoints use CursorPage instead; kept optional for compatibility. */
+  has_more?: boolean;
 }
 
 /**
