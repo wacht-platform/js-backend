@@ -835,6 +835,7 @@ export interface ExecuteAgentResponse {
 }
 
 export type DeploymentLlmProvider = "gemini" | "openai" | "openrouter";
+export type DeploymentEmbeddingProvider = "gemini" | "openai" | "openrouter";
 export type DeploymentStorageProvider = "s3";
 
 export interface DeploymentStorageSettingsResponse {
@@ -869,6 +870,9 @@ export interface AiSettings {
   anthropic_api_key_set: boolean;
   strong_model?: string;
   weak_model?: string;
+  embedding_provider: DeploymentEmbeddingProvider;
+  embedding_model: string;
+  embedding_dimension: number;
   storage: DeploymentStorageSettingsResponse;
 }
 
@@ -882,5 +886,8 @@ export interface UpdateAiSettingsRequest {
   anthropic_api_key?: string;
   strong_model?: string;
   weak_model?: string;
+  embedding_provider?: DeploymentEmbeddingProvider;
+  embedding_model?: string;
+  embedding_dimension?: number;
   storage?: UpdateDeploymentStorageSettingsRequest;
 }
