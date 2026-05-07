@@ -9,12 +9,22 @@ export interface AiAgent {
   configuration: Record<string, unknown>;
   created_at: string;
   updated_at: string;
+  require_approval_mcp?: boolean;
+  require_approval_virtual?: boolean;
+  tool_approval_rules?: AgentToolApprovalRule[];
 }
 
 export interface AiAgentWithDetails extends AiAgent {
   tools_count: number;
   knowledge_bases_count: number;
   sub_agents?: string[];
+}
+
+export type ApprovalAction = "allow" | "deny" | "review";
+
+export interface AgentToolApprovalRule {
+  pattern: string;
+  action: ApprovalAction;
 }
 
 export interface AgentDetailsResponse extends AiAgentWithDetails {
@@ -53,6 +63,9 @@ export interface CreateAiAgentRequest {
   tool_ids?: string[];
   knowledge_base_ids?: string[];
   sub_agents?: string[];
+  require_approval_mcp?: boolean;
+  require_approval_virtual?: boolean;
+  tool_approval_rules?: AgentToolApprovalRule[];
 }
 
 export interface UpdateAiAgentRequest {
@@ -63,6 +76,9 @@ export interface UpdateAiAgentRequest {
   tool_ids?: string[];
   knowledge_base_ids?: string[];
   sub_agents?: string[];
+  require_approval_mcp?: boolean;
+  require_approval_virtual?: boolean;
+  tool_approval_rules?: AgentToolApprovalRule[];
 }
 
 export interface AiTool {
@@ -71,10 +87,10 @@ export interface AiTool {
   description?: string;
   deployment_id: string;
   tool_type: AiToolType;
-  requires_user_approval: boolean;
   configuration: AiToolConfiguration;
   created_at: string;
   updated_at: string;
+  approval_action?: ApprovalAction;
 }
 
 export interface AiToolWithDetails extends AiTool {}
@@ -166,7 +182,6 @@ export interface CreateAiToolRequest {
   name: string;
   description?: string;
   tool_type: string;
-  requires_user_approval?: boolean;
   configuration: AiToolConfiguration;
 }
 
@@ -174,8 +189,11 @@ export interface UpdateAiToolRequest {
   name?: string;
   description?: string;
   tool_type?: string;
-  requires_user_approval?: boolean;
   configuration?: AiToolConfiguration;
+}
+
+export interface UpdateAgentToolApprovalActionRequest {
+  approval_action: ApprovalAction;
 }
 
 export interface AiKnowledgeBase {

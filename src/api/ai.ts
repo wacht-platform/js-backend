@@ -61,6 +61,7 @@ import type {
   UpdateAgentThreadRequest,
   UpdateAiAgentRequest,
   UpdateAiKnowledgeBaseRequest,
+  UpdateAgentToolApprovalActionRequest,
   UpdateAiToolRequest,
   UpdateAiSettingsRequest,
   UpdateMcpServerRequest,
@@ -304,6 +305,16 @@ export async function detachAgentTool(
 ): Promise<void> {
   const sdkClient = client ?? getClient();
   return sdkClient.delete<void>(`/ai/agents/${agentId}/tools/${toolId}`);
+}
+
+export async function setAgentToolApprovalAction(
+  agentId: string,
+  toolId: string,
+  request: UpdateAgentToolApprovalActionRequest,
+  client?: WachtClient,
+): Promise<void> {
+  const sdkClient = client ?? getClient();
+  await sdkClient.patch<void>(`/ai/agents/${agentId}/tools/${toolId}`, request);
 }
 
 export async function listKnowledgeBases(
