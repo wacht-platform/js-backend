@@ -21,7 +21,7 @@ import * as gatewayApi from './api/gateway';
 export interface WachtConfig {
   /** Optional logical name for this client */
   name?: string;
-  /** Base URL of the Wacht API (default: https://api.wacht.io) */
+  /** Base URL of the Wacht API (default: https://api.wacht.dev) */
   baseUrl?: string;
   /** API key for authentication */
   apiKey: string;
@@ -115,7 +115,7 @@ export class WachtClient {
   readonly gateway: BoundApi<typeof gatewayApi>;
 
   constructor(config: WachtConfig) {
-    this.baseUrl = config.baseUrl || 'https://api.wacht.io';
+    this.baseUrl = config.baseUrl || 'https://api.wacht.dev';
     this.defaultTimeout = config.timeout || 30000;
     this.defaultHeaders = {
       'Authorization': `Bearer ${config.apiKey}`,
