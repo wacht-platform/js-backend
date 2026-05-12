@@ -347,6 +347,15 @@ export interface CreateActorRequest {
   metadata?: Record<string, unknown>;
 }
 
+export interface LookupActorParams {
+  subject_type: string;
+  external_key: string;
+}
+
+export interface LookupActorResponse {
+  actor: Actor | null;
+}
+
 export interface ActorProject {
   id: string;
   deployment_id: string;

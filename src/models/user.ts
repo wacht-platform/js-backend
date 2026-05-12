@@ -242,6 +242,7 @@ export interface UserSocialConnection {
 export interface SessionTicketResponse {
   ticket: string;
   expires_at: number;
+  url: string;
 }
 
 /**

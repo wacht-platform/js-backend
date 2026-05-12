@@ -176,6 +176,8 @@ import type {
   ActorProject,
   AgentThread,
   CreateActorRequest,
+  LookupActorParams,
+  LookupActorResponse,
   CreateAiAgentRequest,
   CreateActorProjectRequest,
   CreateAgentThreadRequest,
@@ -522,6 +524,8 @@ export type {
 export type {
   Actor,
   CreateActorRequest,
+  LookupActorParams,
+  LookupActorResponse,
   ActorProject,
   CreateActorProjectRequest,
   UpdateActorProjectRequest,

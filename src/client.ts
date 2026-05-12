@@ -449,27 +449,37 @@ export function createClientStore(): WachtClientStore {
 }
 
 /**
- * Initialize the global client
+ * Initialize the global client explicitly. Optional — `getClient()` will lazily
+ * initialize from `WACHT_API_KEY` (and optional `WACHT_BACKEND_API_URL`) on
+ * first use. Call this only when you need to inject a non-default config.
  */
 export function initClient(config: WachtConfig): void {
   globalClient = new WachtClient(config);
 }
 
 /**
- * Get the global client instance
- * @throws {Error} If client has not been initialized
+ * Get the global client instance. Lazily initializes from environment variables
+ * on first call if not already configured via `initClient()`.
  */
 export function getClient(): WachtClient {
   if (!globalClient) {
-    throw new Error(
-      'Wacht SDK client not initialized. Call initClient() first.'
-    );
+    const env = typeof process !== 'undefined' ? process.env : undefined;
+    const apiKey = env?.WACHT_API_KEY;
+    if (!apiKey) {
+      throw new Error(
+        'Wacht SDK client not initialized. Set WACHT_API_KEY in the environment, or call initClient({ apiKey }) explicitly.',
+      );
+    }
+    globalClient = new WachtClient({
+      apiKey,
+      baseUrl: env?.WACHT_BACKEND_API_URL,
+    });
   }
   return globalClient;
 }
 
 /**
- * Check if the global client has been initialized
+ * Check if the global client has been initialized.
  */
 export function isClientInitialized(): boolean {
   return globalClient !== null;

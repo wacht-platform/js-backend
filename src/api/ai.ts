@@ -32,6 +32,8 @@ import type {
   SkillTreeResponse,
   CreateActorProjectRequest,
   CreateActorRequest,
+  LookupActorParams,
+  LookupActorResponse,
   CreateAgentThreadRequest,
   CreateAiAgentRequest,
   CreateAiKnowledgeBaseRequest,
@@ -535,6 +537,18 @@ export async function createActor(
 ): Promise<Actor> {
   const sdkClient = client ?? getClient();
   return sdkClient.post<Actor>("/ai/actors", request);
+}
+
+export async function lookupActor(
+  params: LookupActorParams,
+  client?: WachtClient,
+): Promise<LookupActorResponse> {
+  const sdkClient = client ?? getClient();
+  const query = new URLSearchParams({
+    subject_type: params.subject_type,
+    external_key: params.external_key,
+  });
+  return sdkClient.get<LookupActorResponse>(`/ai/actors/lookup?${query}`);
 }
 
 export async function getComposioConfig(
