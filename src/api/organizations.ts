@@ -18,6 +18,10 @@ import type {
   UpdateOrganizationRoleRequest,
   Workspace,
   CreateWorkspaceRequest,
+  OrganizationInvitation,
+  OrganizationInvitationSummary,
+  ListOrganizationInvitationsOptions,
+  CreateOrganizationInvitationRequest,
 } from "../models";
 
 /**
@@ -274,5 +278,59 @@ export async function createWorkspaceForOrganization(
   return sdkClient.post<Workspace>(
     `/organizations/${organizationId}/workspaces`,
     formData,
+  );
+}
+
+/**
+ * List invitations issued for an organization.
+ */
+export async function listOrganizationInvitations(
+  organizationId: string,
+  options?: ListOrganizationInvitationsOptions,
+  client?: WachtClient,
+): Promise<PaginatedResponse<OrganizationInvitation>> {
+  const sdkClient = client ?? getClient();
+  const params = new URLSearchParams();
+  if (options?.workspace_id !== undefined) {
+    params.append("workspace_id", options.workspace_id);
+  }
+  if (options?.include_deleted !== undefined) {
+    params.append("include_deleted", String(options.include_deleted));
+  }
+  const queryString = params.toString();
+  return sdkClient.get<PaginatedResponse<OrganizationInvitation>>(
+    `/organizations/${organizationId}/invitations${queryString ? `?${queryString}` : ""}`,
+  );
+}
+
+/**
+ * Create a new invitation to an organization. The returned summary carries
+ * the invitation token — surface it to admin tooling for out-of-band sharing
+ * when the deployment doesn't auto-email invitees.
+ */
+export async function createOrganizationInvitation(
+  organizationId: string,
+  request: CreateOrganizationInvitationRequest,
+  client?: WachtClient,
+): Promise<OrganizationInvitationSummary> {
+  const sdkClient = client ?? getClient();
+  return sdkClient.post<OrganizationInvitationSummary>(
+    `/organizations/${organizationId}/invitations`,
+    request,
+  );
+}
+
+/**
+ * Discard a pending organization invitation. Soft-deletes the row so the
+ * token can no longer be redeemed. No-op for already-discarded invitations.
+ */
+export async function discardOrganizationInvitation(
+  organizationId: string,
+  invitationId: string,
+  client?: WachtClient,
+): Promise<void> {
+  const sdkClient = client ?? getClient();
+  return sdkClient.post<void>(
+    `/organizations/${organizationId}/invitations/${invitationId}/discard`,
   );
 }

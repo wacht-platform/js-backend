@@ -224,6 +224,36 @@ export interface DeploymentWaitlistUser {
 }
 
 /**
+ * User's organization membership (admin view)
+ */
+export interface UserOrganizationMembership {
+  id: string;
+  created_at: string;
+  updated_at: string;
+  organization_id: string;
+  user_id: string;
+  public_metadata: Record<string, unknown>;
+  roles: import("./organization").OrganizationRole[];
+  organization: import("./organization").Organization;
+}
+
+/**
+ * User's workspace membership (admin view)
+ */
+export interface UserWorkspaceMembership {
+  id: string;
+  created_at: string;
+  updated_at: string;
+  workspace_id: string;
+  organization_id: string;
+  organization_membership_id: string;
+  user_id: string;
+  public_metadata: Record<string, unknown>;
+  roles: import("./workspace").WorkspaceRole[];
+  workspace: import("./workspace").Workspace;
+}
+
+/**
  * User social connection model
  */
 export interface UserSocialConnection {
@@ -234,6 +264,74 @@ export interface UserSocialConnection {
   user_email_address_id: string;
   provider: string;
   email_address: string;
+}
+
+/**
+ * Active sign-in for a user (admin view of `signins` table).
+ */
+export interface UserSignin {
+  id: string;
+  created_at: string;
+  updated_at: string;
+  session_id: string;
+  user_id?: string;
+  active_organization_membership_id?: string;
+  active_workspace_membership_id?: string;
+  expires_at: string;
+  last_active_at: string;
+  ip_address: string;
+  browser: string;
+  device: string;
+  city: string;
+  region: string;
+  region_code: string;
+  country: string;
+  country_code: string;
+}
+
+export interface ListUserSigninsOptions {
+  /** Include expired sign-ins in the result (defaults to false). */
+  include_expired?: boolean;
+}
+
+export interface RevokeAllSigninsResponse {
+  revoked: number;
+}
+
+/**
+ * Admin-safe view of a user's passkey. Credential bytes are NOT returned.
+ */
+export interface UserPasskey {
+  id: string;
+  created_at?: string;
+  updated_at?: string;
+  user_id: string;
+  name: string;
+  sign_count: number;
+  transports?: string[];
+  last_used_at?: string;
+  backed_up?: boolean;
+  device_type?: string;
+}
+
+export interface RegeneratedBackupCodesResponse {
+  backup_codes: string[];
+}
+
+/**
+ * Admin-provided base32 TOTP secret + optional label for the authenticator
+ * app. Whitespace and "-" separators in the secret are stripped before
+ * validation; secret must decode to at least 16 bytes (128 bits).
+ */
+export interface CreateAuthenticatorRequest {
+  secret: string;
+  account_name?: string;
+}
+
+export interface CreateAuthenticatorResponse {
+  id: string;
+  /** otpauth:// URL with the secret embedded — render as a QR code or copy as-is. */
+  otp_url: string;
 }
 
 /**

@@ -3,6 +3,9 @@ import type {
   CreateOAuthAppRequest,
   CreateOAuthClientRequest,
   OAuthApp,
+  OAuthAppSigningKey,
+  OAuthAppSigningKeyRotatedResponse,
+  OAuthAppSigningKeysListResponse,
   OAuthClient,
   OAuthDomainVerificationResponse,
   OAuthGrant,
@@ -226,5 +229,52 @@ export async function revokeOAuthGrant(
   const sdkClient = client ?? getClient();
   return sdkClient.post<void>(
     `/oauth/apps/${oauthAppSlug}/clients/${oauthClientId}/grants/${grantId}/revoke`,
+  );
+}
+
+/**
+ * List the OIDC signing keys for an OAuth app. Returns both `active` (signing
+ * new id_tokens) and `retired` (still in JWKS for in-flight verification).
+ * Compromised keys are pulled from JWKS immediately and not returned.
+ */
+export async function listOAuthAppSigningKeys(
+  oauthAppSlug: string,
+  client?: WachtClient,
+): Promise<OAuthAppSigningKey[]> {
+  const sdkClient = client ?? getClient();
+  const response = await sdkClient.get<OAuthAppSigningKeysListResponse>(
+    `/oauth/apps/${oauthAppSlug}/signing-keys`,
+  );
+  return response.keys;
+}
+
+/**
+ * Rotate the OAuth app's signing key. The currently-active key is retired
+ * (stays in JWKS so in-flight tokens continue to verify), and a freshly
+ * provisioned key starts signing new id_tokens.
+ */
+export async function rotateOAuthAppSigningKey(
+  oauthAppSlug: string,
+  client?: WachtClient,
+): Promise<OAuthAppSigningKeyRotatedResponse> {
+  const sdkClient = client ?? getClient();
+  return sdkClient.post<OAuthAppSigningKeyRotatedResponse>(
+    `/oauth/apps/${oauthAppSlug}/signing-keys/rotate`,
+  );
+}
+
+/**
+ * Mark a signing key as compromised. The key is pulled from JWKS immediately
+ * and every id_token it signed stops verifying. Use only on suspected key
+ * leak — for routine rotation use `rotateOAuthAppSigningKey`.
+ */
+export async function compromiseOAuthAppSigningKey(
+  oauthAppSlug: string,
+  kid: string,
+  client?: WachtClient,
+): Promise<void> {
+  const sdkClient = client ?? getClient();
+  return sdkClient.post<void>(
+    `/oauth/apps/${oauthAppSlug}/signing-keys/${kid}/compromise`,
   );
 }

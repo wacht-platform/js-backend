@@ -77,6 +77,8 @@ import type {
   EmailVerificationRecords,
   CustomSmtpConfig,
   DeploymentWithSettings,
+  DeploymentCredentialsApiKey,
+  DeploymentCredentialsResponse,
 } from "./models/deployment";
 import type { DeploymentB2bSettingsUpdates } from "./models/b2b-settings";
 import type {
@@ -132,6 +134,12 @@ import type {
   UpdateOrganizationRoleRequest,
 } from "./models/organization";
 import type {
+  OrganizationInvitation,
+  OrganizationInvitationSummary,
+  ListOrganizationInvitationsOptions,
+  CreateOrganizationInvitationRequest,
+} from "./models/organization";
+import type {
   Workspace,
   WorkspaceListItem,
   WorkspaceDetails,
@@ -158,6 +166,8 @@ import type {
   AiAgent,
   AiAgentWithDetails,
   AgentDetailsResponse,
+  AgentHookStep,
+  AgentHooksConfig,
   AnswerSubmission,
   AnswerValue,
   ApprovalSubmission,
@@ -187,6 +197,10 @@ import type {
   SkillTreeEntry,
   SkillTreeResponse,
   SkillScope,
+  SkillSummaryEntry,
+  AgentSkillsSummary,
+  DelegateProjectTaskRequest,
+  DelegateProjectTaskResponse,
   AiKnowledgeBaseWithDetails,
   KnowledgeBaseListResponse,
   DeploymentEmbeddingProvider,
@@ -311,6 +325,9 @@ import type {
   UpdateOAuthClientRequest,
   RotateOAuthClientSecretResponse,
   OAuthGrant,
+  OAuthAppSigningKey,
+  OAuthAppSigningKeysListResponse,
+  OAuthAppSigningKeyRotatedResponse,
 } from "./models/oauth";
 import type {
   WebhookApp,
@@ -375,6 +392,7 @@ import * as analytics from "./api/analytics";
 import * as utility from "./api/utility";
 import * as health from "./api/health";
 import * as gateway from "./api/gateway";
+import * as credentials from "./api/credentials";
 
 // Client exports
 export {
@@ -435,6 +453,8 @@ export type {
   EmailVerificationRecords,
   CustomSmtpConfig,
   DeploymentWithSettings,
+  DeploymentCredentialsApiKey,
+  DeploymentCredentialsResponse,
 };
 export type { DeploymentB2bSettingsUpdates };
 export type {
@@ -474,6 +494,12 @@ export type {
   UpdateOrganizationRoleRequest,
 };
 export type {
+  OrganizationInvitation,
+  OrganizationInvitationSummary,
+  ListOrganizationInvitationsOptions,
+  CreateOrganizationInvitationRequest,
+};
+export type {
   Workspace,
   WorkspaceListItem,
   WorkspaceDetails,
@@ -499,6 +525,8 @@ export type {
   AiAgent,
   AiAgentWithDetails,
   AgentDetailsResponse,
+  AgentHookStep,
+  AgentHooksConfig,
   CreateAiAgentRequest,
   UpdateAiAgentRequest,
 };
@@ -538,6 +566,10 @@ export type {
   SkillTreeEntry,
   SkillTreeResponse,
   SkillScope,
+  SkillSummaryEntry,
+  AgentSkillsSummary,
+  DelegateProjectTaskRequest,
+  DelegateProjectTaskResponse,
   McpServer,
   McpServerCreateResponse,
   CreateMcpServerRequest,
@@ -655,6 +687,9 @@ export type {
   UpdateOAuthClientRequest,
   RotateOAuthClientSecretResponse,
   OAuthGrant,
+  OAuthAppSigningKey,
+  OAuthAppSigningKeysListResponse,
+  OAuthAppSigningKeyRotatedResponse,
 };
 export type {
   WebhookApp,
@@ -727,4 +762,5 @@ export {
   utility,
   health,
   gateway,
+  credentials,
 };

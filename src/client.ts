@@ -14,6 +14,8 @@ import * as analyticsApi from './api/analytics';
 import * as utilityApi from './api/utility';
 import * as healthApi from './api/health';
 import * as gatewayApi from './api/gateway';
+import * as credentialsApi from './api/credentials';
+import * as sessionsApi from './api/sessions';
 
 /**
  * Configuration options for the Wacht SDK client
@@ -113,6 +115,8 @@ export class WachtClient {
   readonly utility: BoundApi<typeof utilityApi>;
   readonly health: BoundApi<typeof healthApi>;
   readonly gateway: BoundApi<typeof gatewayApi>;
+  readonly credentials: BoundApi<typeof credentialsApi>;
+  readonly sessions: BoundApi<typeof sessionsApi>;
 
   constructor(config: WachtConfig) {
     this.baseUrl = config.baseUrl || 'https://api.wacht.dev';
@@ -139,6 +143,8 @@ export class WachtClient {
     this.utility = this.bindApi(utilityApi);
     this.health = this.bindApi(healthApi);
     this.gateway = this.bindApi(gatewayApi);
+    this.credentials = this.bindApi(credentialsApi);
+    this.sessions = this.bindApi(sessionsApi);
 
     if (config.store && config.name) {
       config.store.register(config.name, this);
@@ -450,8 +456,8 @@ export function createClientStore(): WachtClientStore {
 
 /**
  * Initialize the global client explicitly. Optional — `getClient()` will lazily
- * initialize from `WACHT_API_KEY` (and optional `WACHT_BACKEND_API_URL`) on
- * first use. Call this only when you need to inject a non-default config.
+ * initialize from `WACHT_API_KEY` and the default `https://api.wacht.dev` API
+ * base on first use. Call this only when you need to inject a non-default config.
  */
 export function initClient(config: WachtConfig): void {
   globalClient = new WachtClient(config);
@@ -472,7 +478,6 @@ export function getClient(): WachtClient {
     }
     globalClient = new WachtClient({
       apiKey,
-      baseUrl: env?.WACHT_BACKEND_API_URL,
     });
   }
   return globalClient;

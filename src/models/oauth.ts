@@ -160,3 +160,27 @@ export interface OAuthGrant {
   created_at: string;
   updated_at: string;
 }
+
+/**
+ * One OIDC signing key for an OAuth app. The private half stays in the
+ * database — only the public PEM is returned for external verification.
+ */
+export interface OAuthAppSigningKey {
+  kid: string;
+  algorithm: string;
+  /** `active` signs new id_tokens; `retired` stays in JWKS for in-flight verification. */
+  status: string;
+  public_key_pem: string;
+}
+
+export interface OAuthAppSigningKeysListResponse {
+  keys: OAuthAppSigningKey[];
+}
+
+/**
+ * Returned from a rotate. The previously active key is automatically
+ * retired (still in JWKS); `new` takes over for signing.
+ */
+export interface OAuthAppSigningKeyRotatedResponse {
+  new: OAuthAppSigningKey;
+}

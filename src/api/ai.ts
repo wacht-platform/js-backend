@@ -5,6 +5,7 @@ import {
   type PaginatedResponse,
   type ListOptions,
 } from "../client";
+import { WachtError } from "../error";
 import type {
   Actor,
   ActorMcpServerConnectResponse,
@@ -27,6 +28,9 @@ import type {
   AiTool,
   AiToolWithDetails,
   BinaryFileResponse,
+  AgentSkillsSummary,
+  DelegateProjectTaskRequest,
+  DelegateProjectTaskResponse,
   SkillFileResponse,
   SkillScope,
   SkillTreeResponse,
@@ -125,6 +129,21 @@ export async function getAgentDetails(
   const sdkClient = client ?? getClient();
   return sdkClient.get<AgentDetailsResponse>(
     `/ai/agents/${agentId}/details`,
+  );
+}
+
+/**
+ * Summary of system + agent skills available to the agent. System skills are
+ * built into Wacht; agent skills are uploaded per-agent via the import
+ * bundle endpoint. Returns both lists in one call.
+ */
+export async function listAgentSkillsSummary(
+  agentId: string,
+  client?: WachtClient,
+): Promise<AgentSkillsSummary> {
+  const sdkClient = client ?? getClient();
+  return sdkClient.get<AgentSkillsSummary>(
+    `/ai/agents/${agentId}/skills/list`,
   );
 }
 
@@ -548,7 +567,14 @@ export async function lookupActor(
     subject_type: params.subject_type,
     external_key: params.external_key,
   });
-  return sdkClient.get<LookupActorResponse>(`/ai/actors/lookup?${query}`);
+  try {
+    return await sdkClient.get<LookupActorResponse>(`/ai/actors/lookup?${query}`);
+  } catch (error) {
+    if (error instanceof WachtError && error.statusCode === 404) {
+      return { actor: null };
+    }
+    throw error;
+  }
 }
 
 export async function getComposioConfig(
@@ -770,6 +796,43 @@ export async function getProjectTaskBoardItemFilesystemFile(
   const sdkClient = client ?? getClient();
   return sdkClient.get<TaskWorkspaceFileContent>(
     `/ai/actor-projects/${projectId}/board/items/${itemId}/filesystem/file${buildPathQuery(path)}`,
+  );
+}
+
+/**
+ * Download a board item's filesystem entry as raw bytes. Distinct from
+ * `getProjectTaskBoardItemFilesystemFile`, which returns JSON metadata —
+ * this returns the binary stream with the server's content-type and
+ * filename. Use when surfacing task artifacts to end users.
+ */
+export async function downloadProjectTaskBoardItemFilesystemFile(
+  projectId: string,
+  itemId: string,
+  path: string,
+  client?: WachtClient,
+): Promise<BinaryFileResponse> {
+  const sdkClient = client ?? getClient();
+  const response = await sdkClient.getBinary(
+    `/ai/actor-projects/${projectId}/board/items/${itemId}/filesystem/download${buildPathQuery(path)}`,
+  );
+  return toBinaryFileResponse(response);
+}
+
+/**
+ * Delegate a task from one thread to a target lane thread within the same
+ * project. The new board item is created with the supplied title /
+ * description and routed by `capability_tags`. Returns the assigned agent
+ * and the new task key.
+ */
+export async function delegateProjectTask(
+  projectId: string,
+  request: DelegateProjectTaskRequest,
+  client?: WachtClient,
+): Promise<DelegateProjectTaskResponse> {
+  const sdkClient = client ?? getClient();
+  return sdkClient.post<DelegateProjectTaskResponse>(
+    `/ai/actor-projects/${projectId}/board/items/delegate`,
+    request,
   );
 }
 

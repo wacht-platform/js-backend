@@ -33,6 +33,28 @@ export interface CustomSmtpConfig {
   verified: boolean;
 }
 
+/**
+ * Credentials minted for a deployment by `POST /credentials`. The `api_key.secret`
+ * is shown once at creation — store it immediately, the SDK has no way to
+ * recover it later.
+ */
+export interface DeploymentCredentialsApiKey {
+  id: string;
+  /** Full secret token; only returned at creation. */
+  secret: string;
+  prefix: string;
+  suffix: string;
+  /** API auth app the key belongs to. */
+  app_slug: string;
+}
+
+export interface DeploymentCredentialsResponse {
+  publishable_key: string;
+  frontend_host: string;
+  backend_host: string;
+  api_key: DeploymentCredentialsApiKey;
+}
+
 export interface DeploymentWithSettings {
   id: string;
   created_at: string;

@@ -16,6 +16,15 @@ import type {
   AddPhoneRequest,
   UpdatePhoneRequest,
   UserSocialConnection,
+  UserOrganizationMembership,
+  UserWorkspaceMembership,
+  UserSignin,
+  ListUserSigninsOptions,
+  RevokeAllSigninsResponse,
+  UserPasskey,
+  RegeneratedBackupCodesResponse,
+  CreateAuthenticatorRequest,
+  CreateAuthenticatorResponse,
   ListUsersOptions,
 } from "../models";
 
@@ -245,4 +254,218 @@ export async function deleteSocialConnection(
   return sdkClient.delete<void>(
     `/users/${userId}/social-connections/${connectionId}`,
   );
+}
+
+/**
+ * List a user's organization memberships
+ */
+export async function listOrganizationMemberships(
+  userId: string,
+  client?: WachtClient,
+): Promise<UserOrganizationMembership[]> {
+  const sdkClient = client ?? getClient();
+  const res = await sdkClient.get<PaginatedResponse<UserOrganizationMembership>>(
+    `/users/${userId}/organization-memberships`,
+  );
+  return res.data;
+}
+
+/**
+ * List a user's workspace memberships
+ */
+export async function listWorkspaceMemberships(
+  userId: string,
+  client?: WachtClient,
+): Promise<UserWorkspaceMembership[]> {
+  const sdkClient = client ?? getClient();
+  const res = await sdkClient.get<PaginatedResponse<UserWorkspaceMembership>>(
+    `/users/${userId}/workspace-memberships`,
+  );
+  return res.data;
+}
+
+/**
+ * List a user's active sign-ins
+ */
+export async function listSignins(
+  userId: string,
+  options?: ListUserSigninsOptions,
+  client?: WachtClient,
+): Promise<UserSignin[]> {
+  const sdkClient = client ?? getClient();
+  const qs = options?.include_expired ? "?include_expired=true" : "";
+  const res = await sdkClient.get<PaginatedResponse<UserSignin>>(
+    `/users/${userId}/sessions${qs}`,
+  );
+  return res.data;
+}
+
+/**
+ * Revoke a single sign-in by id
+ */
+export async function revokeSignin(
+  userId: string,
+  signinId: string,
+  client?: WachtClient,
+): Promise<void> {
+  const sdkClient = client ?? getClient();
+  return sdkClient.post<void>(
+    `/users/${userId}/sessions/${signinId}/revoke`,
+    undefined,
+  );
+}
+
+/**
+ * Revoke every active sign-in for the user
+ */
+export async function revokeAllSignins(
+  userId: string,
+  client?: WachtClient,
+): Promise<RevokeAllSigninsResponse> {
+  const sdkClient = client ?? getClient();
+  return sdkClient.post<RevokeAllSigninsResponse>(
+    `/users/${userId}/sessions/revoke-all`,
+    undefined,
+  );
+}
+
+/**
+ * List a user's registered passkeys
+ */
+export async function listPasskeys(
+  userId: string,
+  client?: WachtClient,
+): Promise<UserPasskey[]> {
+  const sdkClient = client ?? getClient();
+  const res = await sdkClient.get<PaginatedResponse<UserPasskey>>(
+    `/users/${userId}/passkeys`,
+  );
+  return res.data;
+}
+
+/**
+ * Rename a passkey
+ */
+export async function renamePasskey(
+  userId: string,
+  passkeyId: string,
+  name: string,
+  client?: WachtClient,
+): Promise<void> {
+  const sdkClient = client ?? getClient();
+  return sdkClient.patch<void>(`/users/${userId}/passkeys/${passkeyId}`, {
+    name,
+  });
+}
+
+/**
+ * Delete a passkey
+ */
+export async function deletePasskey(
+  userId: string,
+  passkeyId: string,
+  client?: WachtClient,
+): Promise<void> {
+  const sdkClient = client ?? getClient();
+  return sdkClient.delete<void>(`/users/${userId}/passkeys/${passkeyId}`);
+}
+
+/**
+ * Set up a TOTP authenticator on behalf of the user with an admin-provided
+ * base32 secret. Returns the otpauth:// URL so the admin can render the QR
+ * code (or copy the URL) and relay it to the user out-of-band.
+ *
+ * Fails with 409 if the user already has an active authenticator — call
+ * `deleteAuthenticator` first to re-enroll.
+ */
+export async function createAuthenticator(
+  userId: string,
+  request: CreateAuthenticatorRequest,
+  client?: WachtClient,
+): Promise<CreateAuthenticatorResponse> {
+  const sdkClient = client ?? getClient();
+  return sdkClient.post<CreateAuthenticatorResponse>(
+    `/users/${userId}/authenticators`,
+    request,
+  );
+}
+
+/**
+ * Delete the user's TOTP authenticator
+ */
+export async function deleteAuthenticator(
+  userId: string,
+  client?: WachtClient,
+): Promise<void> {
+  const sdkClient = client ?? getClient();
+  return sdkClient.delete<void>(`/users/${userId}/authenticators`);
+}
+
+/**
+ * Regenerate the user's backup codes. The new codes are returned once.
+ */
+export async function regenerateBackupCodes(
+  userId: string,
+  client?: WachtClient,
+): Promise<RegeneratedBackupCodesResponse> {
+  const sdkClient = client ?? getClient();
+  return sdkClient.post<RegeneratedBackupCodesResponse>(
+    `/users/${userId}/backup-codes/regenerate`,
+    undefined,
+  );
+}
+
+/**
+ * Mark an email address as primary. The email must be verified.
+ */
+export async function makeEmailPrimary(
+  userId: string,
+  emailId: string,
+  client?: WachtClient,
+): Promise<void> {
+  const sdkClient = client ?? getClient();
+  return sdkClient.post<void>(
+    `/users/${userId}/emails/${emailId}/make-primary`,
+    undefined,
+  );
+}
+
+/**
+ * Mark a phone number as primary. The phone must be verified.
+ */
+export async function makePhonePrimary(
+  userId: string,
+  phoneId: string,
+  client?: WachtClient,
+): Promise<void> {
+  const sdkClient = client ?? getClient();
+  return sdkClient.post<void>(
+    `/users/${userId}/phones/${phoneId}/make-primary`,
+    undefined,
+  );
+}
+
+/**
+ * Remove the user's password (force passwordless).
+ */
+export async function removePassword(
+  userId: string,
+  client?: WachtClient,
+): Promise<void> {
+  const sdkClient = client ?? getClient();
+  return sdkClient.delete<void>(`/users/${userId}/password`);
+}
+
+/**
+ * List the user's social connections
+ */
+export async function listSocialConnections(
+  userId: string,
+  client?: WachtClient,
+): Promise<UserSocialConnection[]> {
+  const sdkClient = client ?? getClient();
+  const res = await sdkClient.get<PaginatedResponse<UserSocialConnection>>(
+    `/users/${userId}/social-connections`,
+  );
+  return res.data;
 }

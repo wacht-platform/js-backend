@@ -12,6 +12,12 @@ export interface AiAgent {
   require_approval_mcp?: boolean;
   require_approval_virtual?: boolean;
   tool_approval_rules?: AgentToolApprovalRule[];
+  /**
+   * Lifecycle hooks: lists of tool invocations the runtime fires at well-
+   * defined points during an agent execution. Empty arrays are equivalent
+   * to omitting the lifecycle.
+   */
+  hooks?: AgentHooksConfig;
 }
 
 export interface AiAgentWithDetails extends AiAgent {
@@ -25,6 +31,31 @@ export type ApprovalAction = "allow" | "deny" | "review";
 export interface AgentToolApprovalRule {
   pattern: string;
   action: ApprovalAction;
+}
+
+/**
+ * One tool invocation in a lifecycle hook list. `tool_name` is the
+ * registered tool the runtime should call; `args` is the JSON argument
+ * payload (defaults to `{}` when omitted).
+ */
+export interface AgentHookStep {
+  tool_name: string;
+  args?: Record<string, unknown>;
+}
+
+/**
+ * Lifecycle hooks an agent fires across an execution. Each key is a list of
+ * `AgentHookStep`s run in order at that lifecycle point. Empty / omitted
+ * lists are no-ops.
+ */
+export interface AgentHooksConfig {
+  execution_start?: AgentHookStep[];
+  before_llm?: AgentHookStep[];
+  after_llm?: AgentHookStep[];
+  before_tool?: AgentHookStep[];
+  after_tool?: AgentHookStep[];
+  on_budget_exhausted?: AgentHookStep[];
+  execution_end?: AgentHookStep[];
 }
 
 export interface AgentDetailsResponse extends AiAgentWithDetails {
@@ -56,6 +87,29 @@ export interface SkillFileResponse {
   content_base64?: string;
 }
 
+/**
+ * One row of the agent-skills summary. `mount_path` is the path the skill is
+ * surfaced at inside the agent's filesystem; `source` is `"system"` or
+ * `"agent"`.
+ */
+export interface SkillSummaryEntry {
+  slug: string;
+  name: string;
+  description?: string;
+  mount_path: string;
+  source: string;
+}
+
+/**
+ * Combined system + agent skills available to an agent. System skills are
+ * built into Wacht; agent skills are uploaded per-agent via the import
+ * bundle endpoint.
+ */
+export interface AgentSkillsSummary {
+  system: SkillSummaryEntry[];
+  agent: SkillSummaryEntry[];
+}
+
 export interface CreateAiAgentRequest {
   name: string;
   description?: string;
@@ -66,6 +120,7 @@ export interface CreateAiAgentRequest {
   require_approval_mcp?: boolean;
   require_approval_virtual?: boolean;
   tool_approval_rules?: AgentToolApprovalRule[];
+  hooks?: AgentHooksConfig;
 }
 
 export interface UpdateAiAgentRequest {
@@ -79,6 +134,7 @@ export interface UpdateAiAgentRequest {
   require_approval_mcp?: boolean;
   require_approval_virtual?: boolean;
   tool_approval_rules?: AgentToolApprovalRule[];
+  hooks?: AgentHooksConfig;
 }
 
 export interface AiTool {
@@ -707,6 +763,34 @@ export interface BinaryFileResponse {
   data: Uint8Array;
   mime_type?: string;
   file_name?: string;
+}
+
+/**
+ * Request to delegate a task from one agent thread to another within the same
+ * project. The target thread must be a valid lane thread the caller is
+ * authorized to delegate to.
+ */
+export interface DelegateProjectTaskRequest {
+  /** Lane thread to assign the new board item to. */
+  target_lane_thread_id: string;
+  /** Human-readable title for the delegated task. */
+  title: string;
+  /** Optional task description / context. */
+  description?: string;
+  /**
+   * Capability tags used by routing — narrows which agents on the target
+   * lane will be considered. Empty/omitted matches any.
+   */
+  capability_tags?: string[];
+}
+
+export interface DelegateProjectTaskResponse {
+  /** Stable task key (e.g. `T-7`). */
+  task_key: string;
+  board_item_id: string;
+  target_lane_thread_id: string;
+  /** Agent assigned to execute the delegated task. */
+  assigned_agent_id: string;
 }
 
 export interface ActorMcpServerSummary {

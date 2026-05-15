@@ -140,3 +140,69 @@ export interface UpdateOrganizationRoleRequest {
   name?: string;
   permissions?: string[];
 }
+
+/**
+ * Pending invitation to an organization. Soft-deleted rows (either accepted
+ * by the user or discarded by an admin) are excluded unless `include_deleted`
+ * is set when listing.
+ */
+export interface OrganizationInvitation {
+  id: string;
+  created_at: string;
+  updated_at: string;
+  organization_id: string;
+  email: string;
+  initial_organization_role_id?: string;
+  initial_organization_role_name?: string;
+  inviter_id?: string;
+  workspace_id?: string;
+  workspace_name?: string;
+  initial_workspace_role_id?: string;
+  initial_workspace_role_name?: string;
+  expired: boolean;
+  expiry?: string;
+  /**
+   * Random token used to construct the accept-invitation URL. Surface this
+   * to admin tooling when out-of-band sharing is needed; treat it like a
+   * secret otherwise.
+   */
+  token: string;
+}
+
+/**
+ * Slim shape returned by the create endpoint — full row is exposed via the
+ * list endpoint.
+ */
+export interface OrganizationInvitationSummary {
+  id: string;
+  token: string;
+  email: string;
+  organization_id: string;
+  organization_name: string;
+  workspace_id?: string;
+}
+
+/**
+ * Options for listing organization invitations.
+ */
+export interface ListOrganizationInvitationsOptions {
+  /** Filter to invitations for a specific workspace within the org. */
+  workspace_id?: string;
+  /**
+   * Include soft-deleted rows (rows are soft-deleted on either accept or
+   * admin discard — the data doesn't distinguish). Defaults to false.
+   */
+  include_deleted?: boolean;
+}
+
+/**
+ * Request to create a new organization invitation.
+ */
+export interface CreateOrganizationInvitationRequest {
+  email: string;
+  role_id?: string;
+  workspace_id?: string;
+  workspace_role_id?: string;
+  /** Days before the invitation token expires. Defaults to 10 when omitted. */
+  expiry_days?: number;
+}
