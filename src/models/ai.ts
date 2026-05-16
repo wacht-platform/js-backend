@@ -156,7 +156,8 @@ export type AiToolType =
   | "platform_event"
   | "code_runner"
   | "internal"
-  | "use_external_service";
+  | "mcp"
+  | "virtual";
 
 export type HttpMethod = "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
 
@@ -183,8 +184,12 @@ export interface AuthorizationConfiguration {
   custom_headers?: SchemaField[];
 }
 
+// Discriminator is PascalCase on the wire (platform uses `#[serde(tag="type")]`
+// with no rename_all). Earlier versions of this SDK used snake_case here; that
+// type-checked but didn't match what the server actually sends.
+
 export interface ApiToolConfiguration {
-  type: "api";
+  type: "Api";
   endpoint: string;
   method?: HttpMethod;
   authorization?: AuthorizationConfiguration;
@@ -194,7 +199,7 @@ export interface ApiToolConfiguration {
 }
 
 export interface PlatformEventToolConfiguration {
-  type: "platform_event";
+  type: "PlatformEvent";
   event_label: string;
   event_data?: Record<string, unknown>;
 }
@@ -205,7 +210,7 @@ export interface CodeRunnerEnvVariable {
 }
 
 export interface CodeRunnerToolConfiguration {
-  type: "code_runner";
+  type: "CodeRunner";
   runtime?: "python";
   code: string;
   input_schema?: SchemaField[];
@@ -216,15 +221,24 @@ export interface CodeRunnerToolConfiguration {
 }
 
 export interface InternalToolConfiguration {
-  type: "internal";
+  type: "Internal";
   tool_type: string;
   input_schema?: SchemaField[];
 }
 
-export interface UseExternalServiceToolConfiguration {
-  type: "use_external_service";
-  service_type: string;
-  input_schema?: SchemaField[];
+export interface McpToolConfiguration {
+  type: "Mcp";
+  mcp_server_id: string;
+  remote_tool_name: string;
+  input_schema?: unknown;
+}
+
+export interface VirtualToolConfiguration {
+  type: "Virtual";
+  provider: string;
+  toolkit_slug: string;
+  remote_tool_slug: string;
+  input_schema?: unknown;
 }
 
 export type AiToolConfiguration =
@@ -232,7 +246,8 @@ export type AiToolConfiguration =
   | PlatformEventToolConfiguration
   | CodeRunnerToolConfiguration
   | InternalToolConfiguration
-  | UseExternalServiceToolConfiguration;
+  | McpToolConfiguration
+  | VirtualToolConfiguration;
 
 export interface CreateAiToolRequest {
   name: string;

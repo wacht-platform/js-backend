@@ -251,7 +251,8 @@ import type {
   PlatformEventToolConfiguration,
   CodeRunnerToolConfiguration,
   InternalToolConfiguration,
-  UseExternalServiceToolConfiguration,
+  McpToolConfiguration,
+  VirtualToolConfiguration,
   CreateAiToolRequest,
   UpdateAiToolRequest,
 } from "./models/ai";
@@ -538,7 +539,8 @@ export type {
   PlatformEventToolConfiguration,
   CodeRunnerToolConfiguration,
   InternalToolConfiguration,
-  UseExternalServiceToolConfiguration,
+  McpToolConfiguration,
+  VirtualToolConfiguration,
   CreateAiToolRequest,
   UpdateAiToolRequest,
 };

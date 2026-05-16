@@ -58,6 +58,8 @@ export interface UpdateUserRequest {
   public_metadata?: Record<string, unknown>;
   private_metadata?: Record<string, unknown>;
   disabled?: boolean;
+  /** "none" | "optional" | "enforced". Admin override of the user's MFA policy. */
+  second_factor_policy?: "none" | "optional" | "enforced";
   /** Remove the stored profile image when true */
   remove_profile_image?: boolean;
   /** Optional profile image uploaded as multipart/form-data */

@@ -126,6 +126,9 @@ export async function updateUser(
   if (request.disabled !== undefined) {
     formData.append("disabled", request.disabled ? "true" : "false");
   }
+  if (request.second_factor_policy !== undefined) {
+    formData.append("second_factor_policy", request.second_factor_policy);
+  }
   if (request.remove_profile_image !== undefined) {
     formData.append(
       "remove_profile_image",
