@@ -22,7 +22,7 @@ export interface Notification {
  */
 export interface CallToAction {
   label: string;
-  url: string;
+  payload: string;
 }
 
 /**
