@@ -14,7 +14,6 @@ import * as analyticsApi from './api/analytics';
 import * as utilityApi from './api/utility';
 import * as healthApi from './api/health';
 import * as gatewayApi from './api/gateway';
-import * as credentialsApi from './api/credentials';
 import * as sessionsApi from './api/sessions';
 
 /**
@@ -115,7 +114,6 @@ export class WachtClient {
   readonly utility: BoundApi<typeof utilityApi>;
   readonly health: BoundApi<typeof healthApi>;
   readonly gateway: BoundApi<typeof gatewayApi>;
-  readonly credentials: BoundApi<typeof credentialsApi>;
   readonly sessions: BoundApi<typeof sessionsApi>;
 
   constructor(config: WachtConfig) {
@@ -143,7 +141,6 @@ export class WachtClient {
     this.utility = this.bindApi(utilityApi);
     this.health = this.bindApi(healthApi);
     this.gateway = this.bindApi(gatewayApi);
-    this.credentials = this.bindApi(credentialsApi);
     this.sessions = this.bindApi(sessionsApi);
 
     if (config.store && config.name) {

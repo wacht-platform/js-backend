@@ -77,8 +77,6 @@ import type {
   EmailVerificationRecords,
   CustomSmtpConfig,
   DeploymentWithSettings,
-  DeploymentCredentialsApiKey,
-  DeploymentCredentialsResponse,
 } from "./models/deployment";
 import type { DeploymentB2bSettingsUpdates } from "./models/b2b-settings";
 import type {
@@ -393,7 +391,6 @@ import * as analytics from "./api/analytics";
 import * as utility from "./api/utility";
 import * as health from "./api/health";
 import * as gateway from "./api/gateway";
-import * as credentials from "./api/credentials";
 
 // Client exports
 export {
@@ -454,8 +451,6 @@ export type {
   EmailVerificationRecords,
   CustomSmtpConfig,
   DeploymentWithSettings,
-  DeploymentCredentialsApiKey,
-  DeploymentCredentialsResponse,
 };
 export type { DeploymentB2bSettingsUpdates };
 export type {
@@ -764,5 +759,4 @@ export {
   utility,
   health,
   gateway,
-  credentials,
 };

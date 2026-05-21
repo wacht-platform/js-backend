@@ -753,6 +753,54 @@ export async function createProjectTaskBoardItem(
   );
 }
 
+export interface WachtFileInput {
+  filename: string;
+  content: Blob | Uint8Array | ArrayBuffer;
+  contentType?: string;
+}
+
+function appendAttachments(form: FormData, files: WachtFileInput[]): void {
+  for (const file of files) {
+    const blob =
+      file.content instanceof Blob
+        ? file.content
+        : new Blob([file.content as BlobPart], {
+            type: file.contentType ?? "application/octet-stream",
+          });
+    form.append("attachments", blob, file.filename);
+  }
+}
+
+function buildCreateBoardItemFormData(
+  request: CreateProjectTaskBoardItemRequest,
+  files: WachtFileInput[],
+): FormData {
+  const form = new FormData();
+  form.append("title", request.title);
+  if (request.description !== undefined) form.append("description", request.description);
+  if (request.status !== undefined) form.append("status", request.status);
+  if (request.schedule_kind !== undefined) form.append("schedule_kind", request.schedule_kind);
+  if (request.next_run_at !== undefined) form.append("next_run_at", String(request.next_run_at));
+  if (request.interval_seconds !== undefined)
+    form.append("interval_seconds", String(request.interval_seconds));
+  if (request.mounts !== undefined) form.append("mounts", JSON.stringify(request.mounts));
+  appendAttachments(form, files);
+  return form;
+}
+
+export async function createProjectTaskBoardItemWithAttachments(
+  projectId: string,
+  request: CreateProjectTaskBoardItemRequest,
+  files: WachtFileInput[],
+  client?: WachtClient,
+): Promise<ProjectTaskBoardItem> {
+  const sdkClient = client ?? getClient();
+  return sdkClient.post<ProjectTaskBoardItem>(
+    `/ai/actor-projects/${projectId}/board/items`,
+    buildCreateBoardItemFormData(request, files),
+  );
+}
+
 export async function getProjectTaskBoardItem(
   projectId: string,
   itemId: string,
@@ -849,6 +897,39 @@ export async function updateProjectTaskBoardItem(
   );
 }
 
+function buildUpdateBoardItemFormData(
+  request: UpdateProjectTaskBoardItemRequest,
+  files: WachtFileInput[],
+): FormData {
+  const form = new FormData();
+  if (request.title !== undefined) form.append("title", request.title);
+  if (request.description !== undefined) form.append("description", request.description);
+  if (request.status !== undefined) form.append("status", request.status);
+  if (request.schedule_kind !== undefined) form.append("schedule_kind", request.schedule_kind);
+  if (request.next_run_at !== undefined) form.append("next_run_at", String(request.next_run_at));
+  if (request.interval_seconds !== undefined)
+    form.append("interval_seconds", String(request.interval_seconds));
+  if (request.clear_schedule !== undefined)
+    form.append("clear_schedule", String(request.clear_schedule));
+  if (request.mounts !== undefined) form.append("mounts", JSON.stringify(request.mounts));
+  appendAttachments(form, files);
+  return form;
+}
+
+export async function updateProjectTaskBoardItemWithAttachments(
+  projectId: string,
+  itemId: string,
+  request: UpdateProjectTaskBoardItemRequest,
+  files: WachtFileInput[],
+  client?: WachtClient,
+): Promise<ProjectTaskBoardItem> {
+  const sdkClient = client ?? getClient();
+  return sdkClient.post<ProjectTaskBoardItem>(
+    `/ai/actor-projects/${projectId}/board/items/${itemId}/update`,
+    buildUpdateBoardItemFormData(request, files),
+  );
+}
+
 export async function archiveProjectTaskBoardItem(
   projectId: string,
   itemId: string,
@@ -933,6 +1014,24 @@ export async function createProjectTaskBoardItemComment(
   return sdkClient.post<ProjectTaskBoardItemComment>(
     `/ai/actor-projects/${projectId}/board/items/${itemId}/comments${buildOptionalQuery({ actor_id: actorId })}`,
     request,
+  );
+}
+
+export async function createProjectTaskBoardItemCommentWithAttachments(
+  projectId: string,
+  itemId: string,
+  actorId: string,
+  body: string,
+  files: WachtFileInput[],
+  client?: WachtClient,
+): Promise<ProjectTaskBoardItemComment> {
+  const sdkClient = client ?? getClient();
+  const form = new FormData();
+  form.append("body", body);
+  appendAttachments(form, files);
+  return sdkClient.post<ProjectTaskBoardItemComment>(
+    `/ai/actor-projects/${projectId}/board/items/${itemId}/comments${buildOptionalQuery({ actor_id: actorId })}`,
+    form,
   );
 }
 
