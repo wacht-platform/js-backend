@@ -17,6 +17,8 @@ import type {
   ComposioConfigResponse,
   ComposioToolkitDetailsResponse,
   ComposioToolkitListResponse,
+  ComposioToolListResponse,
+  InternalToolListResponse,
   AgentDetailsResponse,
   AgentThread,
   AiAgent,
@@ -42,6 +44,7 @@ import type {
   CreateAiAgentRequest,
   CreateAiKnowledgeBaseRequest,
   CreateAiToolRequest,
+  CreateDeploymentAiProviderProfileRequest,
   CreateMcpServerRequest,
   CreateProjectTaskBoardItemCommentRequest,
   DiscoverMcpServerAuthRequest,
@@ -49,6 +52,7 @@ import type {
   McpServerCreateResponse,
   CreateProjectTaskBoardItemRequest,
   CursorPage,
+  DeploymentAiProviderProfileResponse,
   ExecuteAgentRequest,
   ExecuteAgentResponse,
   McpServer,
@@ -58,6 +62,7 @@ import type {
   ProjectTaskBoardItem,
   ProjectTaskBoardItemAssignment,
   ProjectTaskBoardItemComment,
+  SetAgentRoleAgentRequest,
   TaskWorkspaceFileContent,
   TaskWorkspaceListing,
   ThreadMessagesResponse,
@@ -70,6 +75,7 @@ import type {
   UpdateAgentToolApprovalActionRequest,
   UpdateAiToolRequest,
   UpdateAiSettingsRequest,
+  UpdateDeploymentAiProviderProfileRequest,
   UpdateMcpServerRequest,
   UpdateProjectTaskBoardItemRequest,
 } from "../models";
@@ -259,6 +265,23 @@ export async function detachAgentSubAgent(
   );
 }
 
+/**
+ * Set (or reset) a role agent — the designated reviewer or conversation agent
+ * for `agentId`. Pass `agent_id: null` (or omit it) in the request to reset the
+ * role back to the agent itself.
+ */
+export async function setAgentRoleAgent(
+  agentId: string,
+  request: SetAgentRoleAgentRequest,
+  client?: WachtClient,
+): Promise<AiAgentWithDetails> {
+  const sdkClient = client ?? getClient();
+  return sdkClient.put<AiAgentWithDetails>(
+    `/ai/agents/${agentId}/role-agent`,
+    request,
+  );
+}
+
 export async function listTools(
   options?: ListOptions & { search?: string },
   client?: WachtClient,
@@ -266,6 +289,33 @@ export async function listTools(
   const sdkClient = client ?? getClient();
   return sdkClient.get<PaginatedResponse<AiToolWithDetails>>(
     `/ai/tools${buildListQuery(options)}`,
+  );
+}
+
+/**
+ * List the built-in (internal) tools the runtime exposes — name, description,
+ * and JSON input schema for each. Useful for rendering a tool picker.
+ */
+export async function listInternalTools(
+  client?: WachtClient,
+): Promise<InternalToolListResponse> {
+  const sdkClient = client ?? getClient();
+  return sdkClient.get<InternalToolListResponse>("/ai/internal-tools");
+}
+
+/**
+ * List Composio tools available to the deployment. Optionally restrict to a set
+ * of toolkit slugs.
+ */
+export async function listComposioTools(
+  options: { toolkits?: string[] } = {},
+  client?: WachtClient,
+): Promise<ComposioToolListResponse> {
+  const sdkClient = client ?? getClient();
+  return sdkClient.get<ComposioToolListResponse>(
+    `/ai/composio/tools${buildOptionalQuery({
+      toolkits: options.toolkits?.length ? options.toolkits.join(",") : undefined,
+    })}`,
   );
 }
 
@@ -547,6 +597,25 @@ export async function disconnectActorMcpServer(
   return sdkClient.post<void>(
     `/ai/actor-mcp-servers/${mcpServerId}/disconnect?actor_id=${encodeURIComponent(actorId)}`,
     {},
+  );
+}
+
+/**
+ * Paginated list of actors for the deployment. Supports `search` and
+ * `include_archived` in addition to the standard `limit`/`offset`.
+ */
+export async function listActors(
+  options?: ListOptions & { search?: string; include_archived?: boolean },
+  client?: WachtClient,
+): Promise<PaginatedResponse<Actor>> {
+  const sdkClient = client ?? getClient();
+  return sdkClient.get<PaginatedResponse<Actor>>(
+    `/ai/actors${buildOptionalQuery({
+      limit: options?.limit,
+      offset: options?.offset,
+      search: options?.search,
+      include_archived: options?.include_archived,
+    })}`,
   );
 }
 
@@ -1133,12 +1202,33 @@ export async function getLatestThreadTaskGraph(
 
 export async function listThreadMessages(
   threadId: string,
-  options: { limit?: number; before_id?: string; after_id?: string } = {},
+  options: {
+    limit?: number;
+    before_id?: string;
+    after_id?: string;
+    board_item_id?: string;
+  } = {},
   client?: WachtClient,
 ): Promise<ThreadMessagesResponse> {
   const sdkClient = client ?? getClient();
   return sdkClient.get<ThreadMessagesResponse>(
     `/ai/actor-project-threads/${threadId}/messages${buildOptionalQuery(options)}`,
+  );
+}
+
+/**
+ * Answer a pending question raised on a thread (the agent's `ask_user`). Send
+ * either structured `answers` or `freeform_text` in the submission.
+ */
+export async function answerThreadQuestion(
+  threadId: string,
+  request: AnswerSubmission,
+  client?: WachtClient,
+): Promise<ExecuteAgentResponse> {
+  const sdkClient = client ?? getClient();
+  return sdkClient.post<ExecuteAgentResponse>(
+    `/ai/threads/${threadId}/messages/answer`,
+    request,
   );
 }
 
@@ -1196,4 +1286,60 @@ export async function updateAiSettings(
 ): Promise<AiSettings> {
   const sdkClient = client ?? getClient();
   return sdkClient.put<AiSettings>("/ai/settings", request);
+}
+
+export async function listAiProviderProfiles(
+  options?: { limit?: number; offset?: number },
+  client?: WachtClient,
+): Promise<PaginatedResponse<DeploymentAiProviderProfileResponse>> {
+  const sdkClient = client ?? getClient();
+  return sdkClient.get<PaginatedResponse<DeploymentAiProviderProfileResponse>>(
+    `/ai/settings/provider-profiles${buildOptionalQuery({
+      limit: options?.limit,
+      offset: options?.offset,
+    })}`,
+  );
+}
+
+export async function createAiProviderProfile(
+  request: CreateDeploymentAiProviderProfileRequest,
+  client?: WachtClient,
+): Promise<DeploymentAiProviderProfileResponse> {
+  const sdkClient = client ?? getClient();
+  return sdkClient.post<DeploymentAiProviderProfileResponse>(
+    "/ai/settings/provider-profiles",
+    request,
+  );
+}
+
+export async function getAiProviderProfile(
+  profileId: string,
+  client?: WachtClient,
+): Promise<DeploymentAiProviderProfileResponse> {
+  const sdkClient = client ?? getClient();
+  return sdkClient.get<DeploymentAiProviderProfileResponse>(
+    `/ai/settings/provider-profiles/${profileId}`,
+  );
+}
+
+export async function updateAiProviderProfile(
+  profileId: string,
+  request: UpdateDeploymentAiProviderProfileRequest,
+  client?: WachtClient,
+): Promise<DeploymentAiProviderProfileResponse> {
+  const sdkClient = client ?? getClient();
+  return sdkClient.patch<DeploymentAiProviderProfileResponse>(
+    `/ai/settings/provider-profiles/${profileId}`,
+    request,
+  );
+}
+
+export async function deleteAiProviderProfile(
+  profileId: string,
+  client?: WachtClient,
+): Promise<void> {
+  const sdkClient = client ?? getClient();
+  return sdkClient.delete<void>(
+    `/ai/settings/provider-profiles/${profileId}`,
+  );
 }

@@ -1,5 +1,5 @@
 /**
- * Notification model
+ * Notification model (response). Mirrors the backend `Notification` response.
  */
 export interface Notification {
   id: string;
@@ -10,11 +10,15 @@ export interface Notification {
   title: string;
   body: string;
   ctas?: CallToAction[];
-  severity?: NotificationSeverity;
+  severity: NotificationSeverity;
+  is_read: boolean;
+  read_at?: string;
+  is_archived: boolean;
+  archived_at?: string;
   metadata?: Record<string, unknown>;
-  expires_hours?: number;
   created_at: string;
   updated_at: string;
+  expires_at?: string;
 }
 
 /**
@@ -44,6 +48,10 @@ export interface CreateNotificationRequest {
   workspace_id?: string;
   title: string;
   body: string;
+  /** Convenience single-CTA: paired with `action_label` when `ctas` is omitted. */
+  action_url?: string;
+  /** Label for the `action_url` CTA. Defaults to "View" on the backend. */
+  action_label?: string;
   ctas?: CallToAction[];
   severity?: NotificationSeverity;
   metadata?: Record<string, unknown>;

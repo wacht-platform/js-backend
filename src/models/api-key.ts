@@ -35,7 +35,7 @@ export interface RateLimit {
     | "calendar_month";
   duration: number;
   max_requests: number;
-  mode?: "per_app" | "per_key" | "per_ip" | "per_key_and_ip" | "per_app_and_ip";
+  mode?: "per_app" | "per_key" | "per_key_and_ip" | "per_app_and_ip";
   endpoints?: string[];
   priority?: number;
 }

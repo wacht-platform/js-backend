@@ -21,7 +21,7 @@ export interface EmailTemplate {
   template_name: string;
   template_data: string;
   template_from: string;
-  template_reply_to?: string;
+  template_reply_to: string;
   template_subject: string;
 }
 
@@ -172,6 +172,48 @@ export interface DeploymentAuthSettingsUpdates {
   session_inactive_timeout?: number;
 }
 
+/**
+ * The 23 `--wa-*` SDK design tokens (plus the two optional font tokens), per
+ * theme. Field names are snake_case and map to the kebab-case CSS custom
+ * property suffix on the SDK side (e.g. `surface_subtle` -> `--wa-surface-subtle`).
+ * Every token is optional; anything left unset falls back to the SDK default.
+ */
+export interface WaThemeTokens {
+  surface?: string;
+  surface_subtle?: string;
+  background?: string;
+  canvas?: string;
+  text?: string;
+  text_secondary?: string;
+  text_muted?: string;
+  text_faint?: string;
+  border?: string;
+  border_strong?: string;
+  primary?: string;
+  primary_soft?: string;
+  primary_foreground?: string;
+  success?: string;
+  success_soft?: string;
+  info?: string;
+  info_soft?: string;
+  warning?: string;
+  warning_soft?: string;
+  error?: string;
+  error_soft?: string;
+  radius?: string;
+  radius_lg?: string;
+  font_sans?: string;
+  font_mono?: string;
+}
+
+/**
+ * Per-deployment override of the SDK `--wa-*` token contract, split by mode.
+ */
+export interface ThemeTokens {
+  light?: WaThemeTokens;
+  dark?: WaThemeTokens;
+}
+
 export interface DeploymentDisplaySettingsUpdates {
   app_name?: string;
   tos_page_url?: string;
@@ -184,8 +226,7 @@ export interface DeploymentDisplaySettingsUpdates {
   privacy_policy_url?: string;
   signup_terms_statement?: string;
   signup_terms_statement_shown?: boolean;
-  light_mode_settings?: Record<string, unknown>;
-  dark_mode_settings?: Record<string, unknown>;
+  theme_tokens?: ThemeTokens;
   after_logo_click_url?: string;
   organization_profile_url?: string;
   create_organization_url?: string;

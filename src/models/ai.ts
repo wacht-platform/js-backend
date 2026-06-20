@@ -1,4 +1,25 @@
 /**
+ * Per-agent override for one of the model roles (strong / weak). Any field
+ * omitted falls back to the deployment-level AI settings.
+ */
+export interface AgentModelOverride {
+  provider?: string;
+  model?: string;
+  profile_id?: string;
+}
+
+/**
+ * Per-agent runtime limits. Each field is optional and falls back to the
+ * engine default when omitted.
+ */
+export interface AgentLimits {
+  /** Prompt-token count at which conversation history compacts. */
+  context_window_tokens?: number;
+  /** Cumulative token cap per execution run; exceeding it preempts the run. */
+  run_token_budget?: number;
+}
+
+/**
  * AI Agent model
  */
 export interface AiAgent {
@@ -6,9 +27,14 @@ export interface AiAgent {
   name: string;
   description?: string;
   deployment_id: string;
-  configuration: Record<string, unknown>;
   created_at: string;
   updated_at: string;
+  sub_agents?: string[];
+  strong_model?: AgentModelOverride;
+  weak_model?: AgentModelOverride;
+  limits?: AgentLimits;
+  /** Built-in tool names disabled for this agent (empty = all enabled). */
+  disabled_internal_tools?: string[];
   require_approval_mcp?: boolean;
   require_approval_virtual?: boolean;
   tool_approval_rules?: AgentToolApprovalRule[];
@@ -23,7 +49,10 @@ export interface AiAgent {
 export interface AiAgentWithDetails extends AiAgent {
   tools_count: number;
   knowledge_bases_count: number;
-  sub_agents?: string[];
+  /** Designated reviewer agent (omitted = the agent reviews its own work). */
+  reviewer_agent_id?: string;
+  /** Designated conversation agent (omitted = the agent handles its own chats). */
+  conversation_agent_id?: string;
 }
 
 export type ApprovalAction = "allow" | "deny" | "review";
@@ -113,13 +142,17 @@ export interface AgentSkillsSummary {
 export interface CreateAiAgentRequest {
   name: string;
   description?: string;
-  configuration?: Record<string, unknown>;
   tool_ids?: string[];
   knowledge_base_ids?: string[];
   sub_agents?: string[];
+  strong_model?: AgentModelOverride;
+  weak_model?: AgentModelOverride;
+  limits?: AgentLimits;
   require_approval_mcp?: boolean;
   require_approval_virtual?: boolean;
   tool_approval_rules?: AgentToolApprovalRule[];
+  /** Built-in tool names to disable for this agent (empty = all enabled). */
+  disabled_internal_tools?: string[];
   hooks?: AgentHooksConfig;
 }
 
@@ -127,14 +160,57 @@ export interface UpdateAiAgentRequest {
   name?: string;
   description?: string;
   status?: string;
-  configuration?: Record<string, unknown>;
   tool_ids?: string[];
   knowledge_base_ids?: string[];
   sub_agents?: string[];
+  strong_model?: AgentModelOverride;
+  /** Clear the strong-model override (reset to deployment default). */
+  clear_strong_model?: boolean;
+  weak_model?: AgentModelOverride;
+  /** Clear the weak-model override (reset to deployment default). */
+  clear_weak_model?: boolean;
+  limits?: AgentLimits;
   require_approval_mcp?: boolean;
   require_approval_virtual?: boolean;
   tool_approval_rules?: AgentToolApprovalRule[];
+  /** Built-in tool names to disable for this agent (empty = all enabled). */
+  disabled_internal_tools?: string[];
   hooks?: AgentHooksConfig;
+}
+
+/** Which role to set via `setAgentRoleAgent`. */
+export type AgentRole = "reviewer" | "conversation";
+
+export interface SetAgentRoleAgentRequest {
+  /** Which role to set: "reviewer" or "conversation". */
+  role: AgentRole;
+  /** Target agent id; null or omitted resets to the agent itself (default). */
+  agent_id?: string | null;
+}
+
+/** One built-in tool exposed by the runtime. */
+export interface InternalToolSummary {
+  name: string;
+  description: string;
+  input_schema: unknown;
+}
+
+export interface InternalToolListResponse {
+  tools: InternalToolSummary[];
+}
+
+/** One Composio tool, deployment-scoped. */
+export interface ComposioToolSummary {
+  name: string;
+  toolkit_slug: string;
+  remote_tool_slug: string;
+  display_name: string;
+  description: string;
+  input_schema?: unknown;
+}
+
+export interface ComposioToolListResponse {
+  tools: ComposioToolSummary[];
 }
 
 export interface AiTool {
@@ -364,6 +440,7 @@ export interface McpServer {
   updated_at: string;
   deployment_id: string;
   name: string;
+  slug: string;
   config: McpServerConfig;
 }
 
@@ -474,11 +551,12 @@ export interface AgentThread {
   last_activity_at: string;
   completed_at?: string;
   execution_state?: Record<string, unknown>;
-  next_event_sequence?: number;
+  next_event_sequence: number;
   metadata?: Record<string, unknown>;
   created_at: string;
   updated_at: string;
   archived_at?: string;
+  state_version: string;
 }
 
 export interface CreateAgentThreadRequest {
@@ -532,6 +610,8 @@ export interface ProjectTaskBoardItem {
   pending_question?: Record<string, unknown>;
   pending_approval?: Record<string, unknown>;
   mounts: Record<string, unknown>;
+  exclusive_owner_agent_id?: string;
+  deliverables: unknown;
 }
 
 export interface ProjectTaskBoardItemComment {
@@ -589,7 +669,10 @@ export interface QuestionAnswer {
 }
 
 export interface AnswerSubmission {
-  answers: QuestionAnswer[];
+  /** Structured answers; send either these or `freeform_text`, not both. */
+  answers?: QuestionAnswer[];
+  /** Freeform answer text; send instead of structured `answers`. */
+  freeform_text?: string;
 }
 
 export type ToolApprovalMode = "allow_once" | "allow_always";
@@ -680,7 +763,8 @@ export interface ThreadEvent {
 
 export interface ConversationRecord {
   id: string;
-  thread_id: string;
+  thread_id?: string;
+  board_item_id?: string;
   execution_run_id?: string;
   timestamp: string;
   content: Record<string, unknown>;
@@ -1016,4 +1100,50 @@ export interface UpdateAiSettingsRequest {
   embedding_model?: string;
   embedding_dimension?: number;
   storage?: UpdateDeploymentStorageSettingsRequest;
+}
+
+/** A named, deployment-scoped LLM provider profile (keys masked). */
+export interface DeploymentAiProviderProfileResponse {
+  id: string;
+  deployment_id: string;
+  provider: DeploymentLlmProvider;
+  name: string;
+  slug: string;
+  api_key_set: boolean;
+  base_url?: string;
+  organization?: string;
+  project?: string;
+  default_model?: string;
+  enabled: boolean;
+  disable_prompt_caching: boolean;
+  disable_reasoning_effort: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateDeploymentAiProviderProfileRequest {
+  provider: DeploymentLlmProvider;
+  name: string;
+  slug: string;
+  api_key: string;
+  base_url?: string;
+  organization?: string;
+  project?: string;
+  default_model?: string;
+  enabled?: boolean;
+  disable_prompt_caching?: boolean;
+  disable_reasoning_effort?: boolean;
+}
+
+export interface UpdateDeploymentAiProviderProfileRequest {
+  name?: string;
+  slug?: string;
+  api_key?: string;
+  base_url?: string;
+  organization?: string;
+  project?: string;
+  default_model?: string;
+  enabled?: boolean;
+  disable_prompt_caching?: boolean;
+  disable_reasoning_effort?: boolean;
 }

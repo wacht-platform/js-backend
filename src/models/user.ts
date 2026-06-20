@@ -266,6 +266,8 @@ export interface UserSocialConnection {
   user_email_address_id: string;
   provider: string;
   email_address: string;
+  access_token?: string;
+  refresh_token?: string;
 }
 
 /**

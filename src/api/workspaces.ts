@@ -213,3 +213,33 @@ export async function deleteWorkspaceRole(
   const sdkClient = client ?? getClient();
   return sdkClient.delete<void>(`/workspaces/${workspaceId}/roles/${roleId}`);
 }
+
+/**
+ * Assign a role to a workspace member
+ */
+export async function assignWorkspaceMemberRole(
+  workspaceId: string,
+  membershipId: string,
+  roleId: string,
+  client?: WachtClient,
+): Promise<void> {
+  const sdkClient = client ?? getClient();
+  return sdkClient.post<void>(
+    `/workspaces/${workspaceId}/members/${membershipId}/roles/${roleId}`,
+  );
+}
+
+/**
+ * Remove a role from a workspace member
+ */
+export async function removeWorkspaceMemberRole(
+  workspaceId: string,
+  membershipId: string,
+  roleId: string,
+  client?: WachtClient,
+): Promise<void> {
+  const sdkClient = client ?? getClient();
+  return sdkClient.delete<void>(
+    `/workspaces/${workspaceId}/members/${membershipId}/roles/${roleId}`,
+  );
+}

@@ -71,10 +71,12 @@ export interface Jwk {
   crv?: string;
   x?: string;
   y?: string;
+  k?: string;
   x5u?: string;
   x5c?: string[];
   x5t?: string;
   "x5t#S256"?: string;
+  public_key_pem?: string;
 }
 
 export interface JwksDocument {
@@ -101,6 +103,11 @@ export interface OAuthClient {
   jwks?: JwksDocument;
   public_key_pem?: string;
   is_active: boolean;
+  post_logout_redirect_uris: string[];
+  id_token_signing_alg: string;
+  access_token_format: string;
+  access_token_ttl_seconds: number;
+  skip_consent: boolean;
   created_at: string;
   updated_at: string;
   client_secret?: string;
@@ -122,6 +129,11 @@ export interface CreateOAuthClientRequest {
   jwks_uri?: string;
   jwks?: JwksDocument;
   public_key_pem?: string;
+  post_logout_redirect_uris?: string[];
+  id_token_signing_alg?: string;
+  access_token_format?: string;
+  access_token_ttl_seconds?: number;
+  skip_consent?: boolean;
 }
 
 export interface UpdateOAuthClientRequest {
@@ -140,6 +152,11 @@ export interface UpdateOAuthClientRequest {
   jwks_uri?: string;
   jwks?: JwksDocument;
   public_key_pem?: string;
+  post_logout_redirect_uris?: string[];
+  id_token_signing_alg?: string;
+  access_token_format?: string;
+  access_token_ttl_seconds?: number;
+  skip_consent?: boolean;
 }
 
 export interface RotateOAuthClientSecretResponse {

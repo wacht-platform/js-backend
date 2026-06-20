@@ -252,6 +252,36 @@ export async function deleteOrganizationRole(
 }
 
 /**
+ * Assign a role to an organization member
+ */
+export async function assignOrganizationMemberRole(
+  organizationId: string,
+  membershipId: string,
+  roleId: string,
+  client?: WachtClient,
+): Promise<void> {
+  const sdkClient = client ?? getClient();
+  return sdkClient.post<void>(
+    `/organizations/${organizationId}/members/${membershipId}/roles/${roleId}`,
+  );
+}
+
+/**
+ * Remove a role from an organization member
+ */
+export async function removeOrganizationMemberRole(
+  organizationId: string,
+  membershipId: string,
+  roleId: string,
+  client?: WachtClient,
+): Promise<void> {
+  const sdkClient = client ?? getClient();
+  return sdkClient.delete<void>(
+    `/organizations/${organizationId}/members/${membershipId}/roles/${roleId}`,
+  );
+}
+
+/**
  * Create a workspace for an organization
  */
 export async function createWorkspaceForOrganization(

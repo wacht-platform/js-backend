@@ -372,6 +372,17 @@ import type {
 import type {
   AnalyticsStats,
   RecentSignup,
+  DailyAuthMetric,
+  BreakdownItem,
+  TokenUsageBucket,
+  TokenUsageResponse,
+  TokenUsageByModel,
+  TokenUsageByModelResponse,
+  WebhookUsageBucket,
+  WebhookUsageResponse,
+  GatewayUsageBucket,
+  GatewayUsageResponse,
+  AnalyticsUsageOptions,
 } from "./models/analytics";
 
 // API modules - namespace exports
@@ -739,7 +750,21 @@ export type {
   SmtpConfigResponse,
   SmtpVerifyResponse,
 };
-export type { AnalyticsStats, RecentSignup };
+export type {
+  AnalyticsStats,
+  RecentSignup,
+  DailyAuthMetric,
+  BreakdownItem,
+  TokenUsageBucket,
+  TokenUsageResponse,
+  TokenUsageByModel,
+  TokenUsageByModelResponse,
+  WebhookUsageBucket,
+  WebhookUsageResponse,
+  GatewayUsageBucket,
+  GatewayUsageResponse,
+  AnalyticsUsageOptions,
+};
 
 // API module namespace exports
 export {
