@@ -804,13 +804,32 @@ export async function authenticateRequest(
   return { auth, headers };
 }
 
+// Only deserialize headers stripped and overwritten by trusted authentication middleware.
 export function authFromHeaders(headers: Headers): WachtAuth {
   const authHeader = headers.get(AUTH_HEADER);
   let authData: Omit<WachtAuth, "protect" | "has"> | null = null;
   if (authHeader) {
     try {
       const parsed = JSON.parse(authHeader);
-      if (parsed && typeof parsed === "object") authData = parsed;
+      if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+        const ids = ["userId", "sessionId", "organizationId", "workspaceId"] as const;
+        const permissions = ["organizationPermissions", "workspacePermissions"] as const;
+        if (
+          ids.every((key) => parsed[key] === null || typeof parsed[key] === "string") &&
+          permissions.every((key) =>
+            Array.isArray(parsed[key]) && parsed[key].every((value: unknown) => typeof value === "string"),
+          )
+        ) {
+          authData = {
+            userId: parsed.userId,
+            sessionId: parsed.sessionId,
+            organizationId: parsed.organizationId,
+            workspaceId: parsed.workspaceId,
+            organizationPermissions: parsed.organizationPermissions,
+            workspacePermissions: parsed.workspacePermissions,
+          };
+        }
+      }
     } catch {
       authData = null;
     }
