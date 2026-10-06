@@ -806,7 +806,16 @@ export async function authenticateRequest(
 
 export function authFromHeaders(headers: Headers): WachtAuth {
   const authHeader = headers.get(AUTH_HEADER);
-  if (!authHeader) {
+  let authData: Omit<WachtAuth, "protect" | "has"> | null = null;
+  if (authHeader) {
+    try {
+      const parsed = JSON.parse(authHeader);
+      if (parsed && typeof parsed === "object") authData = parsed;
+    } catch {
+      authData = null;
+    }
+  }
+  if (!authData) {
     return {
       userId: null,
       sessionId: null,
@@ -821,21 +830,20 @@ export function authFromHeaders(headers: Headers): WachtAuth {
     };
   }
 
-  const authData = JSON.parse(authHeader) as Omit<WachtAuth, "protect" | "has">;
-
+  const data = authData;
   return {
-    ...authData,
+    ...data,
     protect: async () => {
       throw new Error("Cannot use protect() in this context.");
     },
     has: (check: PermissionCheck) => {
-      if (!authData.userId) return false;
+      if (!data.userId) return false;
       if (
         check.organizationId &&
-        authData.organizationId !== check.organizationId
+        data.organizationId !== check.organizationId
       )
         return false;
-      if (check.workspaceId && authData.workspaceId !== check.workspaceId)
+      if (check.workspaceId && data.workspaceId !== check.workspaceId)
         return false;
       if (!check.permission) return true;
 
@@ -843,8 +851,8 @@ export function authFromHeaders(headers: Headers): WachtAuth {
         ? check.permission
         : [check.permission];
       return requiredPermissions.some((permission) => {
-        if (authData.organizationPermissions?.includes(permission)) return true;
-        if (authData.workspacePermissions?.includes(permission)) return true;
+        if (data.organizationPermissions?.includes(permission)) return true;
+        if (data.workspacePermissions?.includes(permission)) return true;
         return false;
       });
     },
