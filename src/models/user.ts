@@ -132,7 +132,9 @@ export type VerificationStrategy =
   | 'oauth_facebook'
   | 'oauth_linkedin'
   | 'oauth_discord'
-  | 'oauth_apple';
+  | 'oauth_apple'
+  | 'enterprise_sso'
+  | 'scim';
 
 /**
  * Request to add an email
